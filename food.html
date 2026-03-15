@@ -176,7 +176,37 @@ var table   = params.get('table')|| '';
 var couple  = params.get('couple')|| '';
 var venue   = params.get('venue') || '';
 var wdate   = params.get('date')  || '';
-var orgPhone= params.get('org')   || ''; // organiser WhatsApp number
+var orgPhone= params.get('org')   || '';
+
+// ── HOST AUTO-UPDATE MODE ──────────────────────
+// When host taps the update link from WhatsApp reply, this runs
+if(params.get('update')==='1' && famId && params.get('pref')){
+  var pref = params.get('pref');
+  try{
+    // Update in app's FAM localStorage
+    var FAM = JSON.parse(localStorage.getItem('wed_f5')||'[]');
+    var idx = FAM.findIndex(function(f){ return f.id===famId; });
+    if(idx >= 0){
+      FAM[idx].foodPref = pref;
+      localStorage.setItem('wed_f5', JSON.stringify(FAM));
+      // Immediately redirect to the app — update is already saved in localStorage
+      window.location.href = 'https://narender13in-hue.github.io/Wedding-Guest-Entry-App/';
+    } else {
+      document.addEventListener('DOMContentLoaded', function(){
+        document.body.innerHTML = '<div style="text-align:center;padding:40px;font-family:Georgia,serif;color:#f0e6d3;background:#0a0a0f;min-height:100vh;display:flex;align-items:center;justify-content:center"><div><div style="font-size:40px;margin-bottom:12px">⚠️</div><div style="font-size:16px;color:#e0a030">Family not found</div><div style="font-size:12px;color:#7a6a5a;margin-top:8px">Make sure you are on the same device/browser as your Wedding Entry app.</div><br><a href="https://narender13in-hue.github.io/Wedding-Guest-Entry-App/" style="color:#d4af37">Open App</a></div></div>';
+      });
+    }
+  }catch(err){
+    document.addEventListener('DOMContentLoaded', function(){
+      document.body.innerHTML = '<div style="text-align:center;padding:40px;font-family:Georgia,serif;color:#f0e6d3;background:#0a0a0f;min-height:100vh;display:flex;align-items:center;justify-content:center"><div><div style="font-size:16px;color:#e05555">Update failed: '+err.message+'</div><br><a href="https://narender13in-hue.github.io/Wedding-Guest-Entry-App/" style="color:#d4af37">Open App</a></div></div>';
+    });
+  }
+  // Don't show the guest form
+  document.addEventListener('DOMContentLoaded', function(){
+    var f=document.getElementById('formView');
+    if(f) f.style.display='none';
+  });
+}
 
 // Storage key per family
 var STORE_KEY = 'food_pref_' + famId;
@@ -237,11 +267,15 @@ function submit(){
   var guestName2 = decodeURIComponent(famName);
   var tableStr   = table ? ' (' + decodeURIComponent(table) + ')' : '';
   var icon = chosen==='Veg' ? '🥗' : chosen==='Non-Veg' ? '🍗' : '🍽️';
-  var msg = icon + ' *Food Preference*'
-    + '\n\n*Name:* ' + guestName2 + tableStr
+  // Build a one-tap update link for the host
+  var appBase = 'https://narender13in-hue.github.io/Wedding-Guest-Entry-App/';
+  var updateLink = appBase + 'food.html?update=1&id=' + encodeURIComponent(famId) + '&pref=' + encodeURIComponent(chosen);
+
+  var msg = icon + ' *Food Preference Received*'
+    + '\n\n*Guest:* ' + guestName2 + tableStr
     + '\n*Choice:* ' + icon + ' ' + chosen
-    + '\n*Family ID:* ' + famId
-    + '\n\n_(Please update in your Wedding Entry app)_';
+    + '\n\n*Tap to update app automatically:*'
+    + '\n' + updateLink;
   var waUrl = orgPhone
     ? 'https://wa.me/' + orgPhone.replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent(msg)
     : 'https://wa.me/?text=' + encodeURIComponent(msg);
@@ -264,7 +298,13 @@ function skipPref(){
   // Show WhatsApp button
   var guestName2 = decodeURIComponent(famName);
   var tableStr = table ? ' (' + decodeURIComponent(table) + ')' : '';
-  var msg = '🍽️ *Food Preference*' + '\n\n*Name:* ' + guestName2 + tableStr + '\n*Choice:* 🍽️ No Preference' + '\n*Family ID:* ' + famId + '\n\n_(Please update in your Wedding Entry app)_';
+  var appBase2 = 'https://narender13in-hue.github.io/Wedding-Guest-Entry-App/';
+  var updateLink2 = appBase2 + 'food.html?update=1&id=' + encodeURIComponent(famId) + '&pref=' + encodeURIComponent('No Preference');
+  var msg = '🍽️ *Food Preference Received*'
+    + '\n\n*Guest:* ' + guestName2 + tableStr
+    + '\n*Choice:* 🍽️ No Preference'
+    + '\n\n*Tap to update app automatically:*'
+    + '\n' + updateLink2;
   var waUrl = orgPhone
     ? 'https://wa.me/' + orgPhone.replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent(msg)
     : 'https://wa.me/?text=' + encodeURIComponent(msg);

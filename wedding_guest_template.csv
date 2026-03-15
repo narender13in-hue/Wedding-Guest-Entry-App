@@ -1,11 +1,18 @@
 name,phone,table,maxGuests
-The Johnson Family,+1 555 0101,Table 1,4
-The Williams Family,+1 555 0102,Table 2,6
-The Brown Family,+1 555 0103,Table 3,5
-The Davis Family,+44 7700 900123,Table 4,4
-The Miller Family,+1 555 0105,Table 5,6
-The Wilson Family,+1 555 0106,Table 6,3
-The Moore Family,+1 555 0107,Table 7,4
-The Taylor Family,+1 555 0108,Table 8,5
-The Anderson Family,+1 555 0109,Table 9,4
-The Thomas Family,+1 555 0110,Table 10,6
+The Johnson Family,,Table 1,4
+The Williams Family,,Table 2,6
+The Brown Family,,Table 3,5
+The Davis Family,,Table 4,4
+The Miller Family,,Table 5,6
+The Wilson Family,,Table 6,3
+The Moore Family,,Table 7,4
+The Taylor Family,,Table 8,5
+The Anderson Family,,Table 9,4
+The Thomas Family,,Table 10,6
+The Varun Raj Family,91-9703740234,Table 11,4
+The Kiran Raj Family,,Table 12,4
+The Sansoth Raj Family,,Table 13,4
+The Narender Ku Family,,Table 14,4
+The Rohan Raj Family,,Table 15,4
+The Sanjeeth Raj Family,,Table 16,4
+The Ganga bai Family,,Table 17,1
