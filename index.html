@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Wedding Entry"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<link rel="manifest" href="manifest.json"/>
+<title>Wedding Entry</title>
+<script>
+// Load QR libraries with CDN fallbacks
+function loadScript(urls,cb){
+  var i=0;
+  function next(){
+    if(i>=urls.length){if(cb)cb(false);return;}
+    var s=document.createElement('script');
+    s.src=urls[i++];
+    s.onload=function(){if(cb)cb(true);};
+    s.onerror=next;
+    document.head.appendChild(s);
+  }
+  next();
+}
+loadScript([
+  'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
+  'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js',
+  'https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js'
+]);
+loadScript([
+  'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js',
+  'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js',
+  'https://unpkg.com/jsqr@1.4.0/dist/jsQR.js'
+]);
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --gold:#d4af37;--gdim:rgba(212,175,55,.25);--gfaint:rgba(212,175,55,.08);
+  --bg:#0a0a0f;--sur:rgba(255,255,255,.03);
+  --tx:#f0e6d3;--txd:#7a6a5a;--txm:#4a3a2a;
+  --red:#e05555;--warn:#e0a030;--grn:#5eb87a;--blue:#7b9cff;
+  --f:'Georgia','Times New Roman',serif;--m:'Courier New',monospace;
+}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--f);overscroll-behavior:none}
+body{display:flex;flex-direction:column;min-height:100vh;min-height:-webkit-fill-available}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at 20% 20%,rgba(212,175,55,.05)0%,transparent 60%),
+             radial-gradient(ellipse at 80% 80%,rgba(100,50,150,.05)0%,transparent 60%)}
+.app{display:flex;flex-direction:column;min-height:100vh;min-height:-webkit-fill-available;position:relative;z-index:1}
+/* HEADER */
+.hdr{background:rgba(0,0,0,.65);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--gdim);padding:10px 16px;
+  padding-top:max(10px,env(safe-area-inset-top));flex-shrink:0}
+.hdr-row{display:flex;align-items:flex-start;justify-content:space-between}
+.hdr-sub{font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase}
+.hdr-ttl{font-size:17px;color:#f8f0e0;font-weight:normal;line-height:1.2}
+.hdr-meta{font-size:10px;color:var(--txm);margin-top:1px;font-style:italic}
+/* TABS */
+.tabs{display:flex;background:rgba(0,0,0,.4);border-bottom:1px solid rgba(212,175,55,.15);flex-shrink:0}
+.tab{flex:1;padding:9px 2px;text-align:center;font-size:9px;letter-spacing:.5px;text-transform:uppercase;
+  font-family:var(--f);color:var(--txd);border:none;background:none;cursor:pointer;
+  border-bottom:2px solid transparent;transition:all .2s}
+.tab.on{color:var(--gold);border-bottom-color:var(--gold);background:var(--gfaint)}
+/* COUNTERS */
+.ctrs{display:flex;border-bottom:1px solid rgba(212,175,55,.1);background:rgba(0,0,0,.3);flex-shrink:0}
+.ctr{flex:1;padding:7px 2px;text-align:center;border-right:1px solid rgba(212,175,55,.1)}
+.ctr:last-child{border-right:none}
+.cv{font-size:19px;color:var(--gold);line-height:1}
+.cs{font-size:8px;color:#5a4a3a}
+.cl{font-size:7px;color:var(--txm);letter-spacing:.5px;text-transform:uppercase;margin-top:1px}
+/* MAIN */
+.main{flex:1;overflow-y:auto;padding:14px;padding-bottom:max(14px,env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+/* PANEL */
+.panel{background:var(--sur);border:1px solid var(--gdim);border-radius:12px;padding:20px 16px;position:relative;margin-bottom:14px}
+.cn{position:absolute;width:13px;height:13px}
+.cn.tl{top:8px;left:8px;border-top:2px solid var(--gold);border-left:2px solid var(--gold)}
+.cn.tr{top:8px;right:8px;border-top:2px solid var(--gold);border-right:2px solid var(--gold)}
+.cn.bl{bottom:8px;left:8px;border-bottom:2px solid var(--gold);border-left:2px solid var(--gold)}
+.cn.br{bottom:8px;right:8px;border-bottom:2px solid var(--gold);border-right:2px solid var(--gold)}
+/* CAMERA */
+.cam-wrap{position:relative;width:100%;max-width:340px;margin:0 auto 12px;border-radius:12px;overflow:hidden;background:#000}
+.cam-wrap video{width:100%;display:block;border-radius:12px}
+.sf{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.sfi{width:62%;aspect-ratio:1;position:relative}
+.sc{position:absolute;width:20px;height:20px}
+.sc.tl{top:0;left:0;border-top:3px solid var(--gold);border-left:3px solid var(--gold)}
+.sc.tr{top:0;right:0;border-top:3px solid var(--gold);border-right:3px solid var(--gold)}
+.sc.bl{bottom:0;left:0;border-bottom:3px solid var(--gold);border-left:3px solid var(--gold)}
+.sc.br{bottom:0;right:0;border-bottom:3px solid var(--gold);border-right:3px solid var(--gold)}
+.sc.ex{border-color:var(--blue)!important}
+@keyframes scanline{0%{top:10%}50%{top:85%}100%{top:10%}}
+.sl{position:absolute;left:5%;right:5%;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  animation:scanline 2s ease-in-out infinite;box-shadow:0 0 8px var(--gold)}
+.sl.ex{background:linear-gradient(90deg,transparent,var(--blue),transparent);box-shadow:0 0 8px var(--blue)}
+@keyframes flashG{0%{opacity:0}30%{opacity:.5}100%{opacity:0}}
+@keyframes flashB{0%{opacity:0}30%{opacity:.4}100%{opacity:0}}
+.cf{position:absolute;inset:0;border-radius:12px;opacity:0;pointer-events:none}
+.cf.gg{animation:flashG .5s ease-out forwards;background:var(--grn)}
+.cf.gb{animation:flashB .5s ease-out forwards;background:var(--blue)}
+.cstat{font-size:11px;text-align:center;padding:6px 12px;border-radius:6px;margin-bottom:10px}
+.cstat.sc1{color:var(--gold);background:var(--gfaint);border:1px solid var(--gdim)}
+.cstat.sc2{color:var(--blue);background:rgba(123,156,255,.08);border:1px solid rgba(123,156,255,.3)}
+.cstat.sc3{color:var(--red);background:rgba(224,85,85,.1);border:1px solid rgba(224,85,85,.3)}
+/* MODE TOGGLES */
+.mtog{display:flex;background:rgba(0,0,0,.3);border:1px solid rgba(212,175,55,.2);border-radius:8px;margin-bottom:10px;overflow:hidden}
+.mbtn{flex:1;padding:9px 4px;text-align:center;font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  font-family:var(--f);color:var(--txd);border:none;background:none;cursor:pointer;transition:all .2s}
+.mbtn.on{background:var(--gfaint);color:var(--gold)}
+.atog{display:flex;gap:8px;margin-bottom:12px}
+.abtn{flex:1;padding:10px 4px;text-align:center;font-size:11px;letter-spacing:1px;text-transform:uppercase;
+  font-family:var(--f);border-radius:8px;cursor:pointer;border:none;-webkit-appearance:none}
+.abtn.ai{background:rgba(94,184,122,.12);border:1px solid rgba(94,184,122,.3);color:var(--grn)}
+.abtn.ai.on{background:rgba(94,184,122,.25);border-color:var(--grn)}
+.abtn.ao{background:rgba(123,156,255,.08);border:1px solid rgba(123,156,255,.25);color:var(--blue)}
+.abtn.ao.on{background:rgba(123,156,255,.2);border-color:var(--blue)}
+/* INPUTS */
+.cinp{width:100%;padding:12px;background:rgba(255,255,255,.05);border:1px solid rgba(212,175,55,.4);
+  border-radius:6px;color:var(--tx);font-size:20px;text-align:center;letter-spacing:4px;
+  text-transform:uppercase;outline:none;font-family:var(--m);caret-color:var(--gold)}
+.cinp:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(212,175,55,.12)}
+.cinp.ex{border-color:rgba(123,156,255,.5);caret-color:var(--blue)}
+.sinp{width:100%;padding:11px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(212,175,55,.3);
+  border-radius:6px;color:var(--tx);font-size:14px;outline:none;font-family:var(--f);margin-bottom:10px;caret-color:var(--gold)}
+.sinp:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(212,175,55,.08)}
+/* BUTTONS */
+.bp{display:block;width:100%;padding:13px;margin-top:10px;background:linear-gradient(135deg,#d4af37,#b8922a);
+  border:none;border-radius:6px;color:#0a0a0f;font-size:13px;font-weight:bold;letter-spacing:3px;
+  text-transform:uppercase;cursor:pointer;font-family:var(--f);transition:opacity .15s}
+.bp:active{opacity:.82}
+.bp:disabled{opacity:.3;cursor:not-allowed}
+.bx{display:block;width:100%;padding:13px;margin-top:10px;background:linear-gradient(135deg,#7b9cff,#5577ee);
+  border:none;border-radius:6px;color:#fff;font-size:13px;font-weight:bold;letter-spacing:3px;
+  text-transform:uppercase;cursor:pointer;font-family:var(--f);transition:opacity .15s}
+.bx:active{opacity:.82}
+.bs{padding:10px 18px;background:transparent;border:1px solid var(--gdim);border-radius:6px;
+  color:var(--gold);font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:var(--f)}
+.bg{padding:11px;flex:1;background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:6px;
+  color:var(--txd);font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:var(--f)}
+.bsm{padding:6px 12px;border-radius:4px;font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  font-family:var(--f);cursor:pointer;border:none;-webkit-appearance:none}
+.be{background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.4)!important;color:var(--gold)}
+.bc{background:transparent;border:1px solid rgba(200,50,50,.3)!important;color:var(--red)}
+.bq{background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3)!important;color:var(--gold);font-size:9px;padding:3px 8px}
+.bd{background:transparent;border:1px solid rgba(200,50,50,.25)!important;color:var(--red);font-size:9px;padding:3px 8px}
+.bsm:disabled{opacity:.3;cursor:default}
+/* VISITOR PICKER */
+.vrow{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:18px}
+.vb{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid var(--gdim);
+  color:var(--gold);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.vb:active{background:rgba(212,175,55,.15)}
+.vn{font-size:44px;color:var(--tx);min-width:60px;text-align:center}
+/* PROGRESS BAR */
+.pbar-wrap{margin:0 auto 12px;max-width:260px}
+.pbar-top{display:flex;justify-content:space-between;margin-bottom:4px}
+.pbar-bg{background:rgba(255,255,255,.08);border-radius:20px;height:7px;overflow:hidden}
+.pbar-fill{height:100%;border-radius:20px;transition:width .2s,background .2s}
+/* QUICK SELECT */
+.qgrid{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+.qb{padding:4px 8px;border-radius:4px;cursor:pointer;font-size:10px;font-family:var(--m)}
+.qb.qi{background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.4);color:var(--gold)}
+.qb.qo{background:rgba(123,156,255,.1);border:1px solid rgba(123,156,255,.3);color:var(--blue)}
+.qb.qn{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--txd)}
+/* CARDS */
+.fc{padding:12px 14px;border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07)}
+.ec{padding:11px 14px;border-radius:8px;margin-bottom:8px}
+.ec.en{background:var(--gfaint);border:1px solid var(--gdim)}
+.ec.eo{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07)}
+.ec.ex2{background:rgba(123,156,255,.04);border:1px solid rgba(123,156,255,.18)}
+/* BADGES */
+.badge{font-size:9px;padding:2px 7px;border-radius:10px}
+.bi{background:rgba(94,184,122,.15);color:var(--grn);border:1px solid rgba(94,184,122,.3)}
+.bo{background:rgba(123,156,255,.12);color:var(--blue);border:1px solid rgba(123,156,255,.3)}
+.bp2{background:rgba(255,255,255,.04);color:var(--txm);border:1px solid rgba(255,255,255,.08)}
+.bf{background:rgba(224,85,85,.12);color:var(--red);border:1px solid rgba(224,85,85,.3)}
+/* TIME STRIP */
+.ts-row{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.ts{font-size:9px;padding:2px 7px;border-radius:10px}
+.ts.ti{background:rgba(94,184,122,.1);color:var(--grn);border:1px solid rgba(94,184,122,.22)}
+.ts.to{background:rgba(123,156,255,.1);color:var(--blue);border:1px solid rgba(123,156,255,.22)}
+.ts.td{background:rgba(212,175,55,.08);color:var(--gold);border:1px solid rgba(212,175,55,.18)}
+/* WARNINGS */
+.warn-box{padding:10px 13px;border-radius:8px;margin-bottom:12px;text-align:center}
+.warn-box.ww{background:rgba(224,160,48,.1);border:1px solid rgba(224,160,48,.4)}
+.warn-box.wr{background:rgba(224,85,85,.1);border:1px solid rgba(224,85,85,.4)}
+/* ANIMATIONS */
+@keyframes tickIn{0%{transform:scale(.4);opacity:0}65%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.tick{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  margin:0 auto 14px;font-size:32px;animation:tickIn .5s cubic-bezier(.175,.885,.32,1.275)}
+.tick.tg{background:rgba(94,184,122,.12);border:2px solid var(--grn);color:var(--grn)}
+.tick.tb{background:rgba(123,156,255,.12);border:2px solid var(--blue);color:var(--blue)}
+/* CSV / DROP */
+.drop{border:2px dashed rgba(212,175,55,.3);border-radius:10px;padding:24px 16px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:10px}
+.drop.ov{border-color:var(--gold);background:var(--gfaint)}
+.tbox{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:12px;margin-bottom:10px}
+.tbox-t{font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.tbox-c{font-family:var(--m);font-size:11px;color:#a09070;line-height:1.7;white-space:pre;overflow-x:auto}
+.pvw{overflow-x:auto;margin-bottom:10px;border-radius:8px;border:1px solid rgba(212,175,55,.2)}
+.pvw table{width:100%;border-collapse:collapse;font-size:11px}
+.pvw th{padding:6px 9px;background:rgba(212,175,55,.1);color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-size:9px;text-align:left;border-bottom:1px solid rgba(212,175,55,.2)}
+.pvw td{padding:6px 9px;color:var(--tx);border-bottom:1px solid rgba(255,255,255,.04)}
+.pvw tr:last-child td{border-bottom:none}
+/* QR MODAL */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)}
+.mbox{background:#111118;border:1px solid var(--gdim);border-radius:16px;padding:26px 20px;max-width:340px;width:100%;position:relative;text-align:center}
+.mclose{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--txd);font-size:22px;cursor:pointer}
+.qrbox{background:#fff;border-radius:10px;padding:13px;display:inline-block;margin:14px 0}
+/* PRINT */
+.psheet{display:none}
+@media print{body>*{display:none!important}.psheet{display:block!important;background:#fff}}
+/* MISC */
+.slbl{font-size:9px;color:#5a4a3a;letter-spacing:2px;text-transform:uppercase;margin:12px 0 7px}
+.row{display:flex;gap:10px}
+.center{text-align:center}
+.empty{text-align:center;padding:40px 20px;border:1px solid rgba(212,175,55,.1);border-radius:12px;color:#5a4a3a;font-size:13px}
+.laste{display:flex;align-items:center;gap:11px;padding:11px 13px;margin-bottom:13px;background:var(--gfaint);border:1px solid var(--gdim);border-radius:8px}
+.ibnr{margin:0 14px 10px;padding:10px 13px;background:rgba(212,175,55,.08);border:1px solid var(--gdim);border-radius:8px;display:none;align-items:center;gap:10px}
+.itxt{flex:1;font-size:11px;color:#c0a860;line-height:1.5}
+.footer{border-top:1px solid rgba(212,175,55,.08);padding:8px 16px;padding-bottom:max(8px,env(safe-area-inset-bottom));
+  display:flex;justify-content:space-between;background:rgba(0,0,0,.4);flex-shrink:0}
+.ftr{font-size:9px;color:var(--txm);letter-spacing:1px;text-transform:uppercase}
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:rgba(12,12,12,.96);
+  border:1px solid var(--gdim);border-radius:8px;padding:9px 16px;font-size:12px;color:var(--tx);
+  z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* ── LOGIN SCREEN ── */
+.login-overlay{position:fixed;inset:0;z-index:999;background:linear-gradient(135deg,#0a0a0f 0%,#1a0a1a 50%,#0a0f1a 100%);
+  display:flex;align-items:center;justify-content:center;padding:24px;}
+.login-box{width:100%;max-width:360px;background:rgba(255,255,255,.03);border:1px solid var(--gdim);
+  border-radius:16px;padding:36px 28px;position:relative;}
+.login-corner{position:absolute;width:16px;height:16px;}
+.login-corner.tl{top:10px;left:10px;border-top:2px solid var(--gold);border-left:2px solid var(--gold);}
+.login-corner.tr{top:10px;right:10px;border-top:2px solid var(--gold);border-right:2px solid var(--gold);}
+.login-corner.bl{bottom:10px;left:10px;border-bottom:2px solid var(--gold);border-left:2px solid var(--gold);}
+.login-corner.br{bottom:10px;right:10px;border-bottom:2px solid var(--gold);border-right:2px solid var(--gold);}
+.login-inp{width:100%;padding:13px 14px;background:rgba(255,255,255,.06);
+  border:1px solid rgba(212,175,55,.35);border-radius:8px;color:var(--tx);
+  font-size:15px;outline:none;font-family:var(--f);margin-bottom:12px;caret-color:var(--gold);}
+.login-inp:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(212,175,55,.12);}
+.login-err{font-size:11px;color:var(--red);text-align:center;margin-bottom:10px;
+  padding:8px;background:rgba(224,85,85,.1);border:1px solid rgba(224,85,85,.3);border-radius:6px;}
+.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,#d4af37,#b8922a);
+  border:none;border-radius:8px;color:#0a0a0f;font-size:14px;font-weight:bold;
+  letter-spacing:3px;text-transform:uppercase;cursor:pointer;font-family:var(--f);}
+.login-btn:active{opacity:.85;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hdr">
+    <div class="hdr-row">
+      <div>
+        <div class="hdr-sub">Wedding Reception</div>
+        <div class="hdr-ttl" id="hTtl">Guest Entry System</div>
+        <div class="hdr-meta" id="hMeta"></div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:10px;color:var(--txm)" id="hDate"></div>
+      </div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab on" id="t0" onclick="go(0)">⬡ Check-In</button>
+    <button class="tab"    id="t1" onclick="go(1)">👨‍👩‍👧 Families</button>
+    <button class="tab"    id="t2" onclick="go(2)">▤ Report</button>
+    <button class="tab"    id="t3" onclick="go(3)">⚙ Settings</button>
+  </div>
+  <div class="ctrs">
+    <div class="ctr"><div class="cv" id="cF">0</div><div class="cs" id="cFs">of 0</div><div class="cl">Checked In</div></div>
+    <div class="ctr"><div class="cv" id="cG">0</div><div class="cs">&nbsp;</div><div class="cl">Inside Now</div></div>
+    <div class="ctr"><div class="cv" id="cX">0</div><div class="cs">&nbsp;</div><div class="cl">Exited</div></div>
+    <div class="ctr"><div class="cv" id="cR">0</div><div class="cs">&nbsp;</div><div class="cl">Remaining</div></div>
+  </div>
+  <div id="iBnr" class="ibnr">
+    <div class="itxt" id="iTxt"></div>
+    <button style="background:none;border:none;color:var(--txd);font-size:18px;cursor:pointer;flex-shrink:0" onclick="document.getElementById('iBnr').style.display='none'">✕</button>
+  </div>
+  <div class="main" id="main"></div>
+  <div class="footer">
+    <div class="ftr">Wedding Entry</div>
+    <div class="ftr" id="fDate"></div>
+  </div>
+</div>
+
+<video id="camVid" playsinline muted style="display:none"></video>
+<canvas id="camCvs" style="display:none"></canvas>
+
+<!-- ═══ CAMERA OVERLAY — fixed, never inside .main ═══ -->
+<div id="camOverlay" style="display:none;position:fixed;inset:0;z-index:300;background:#000;flex-direction:column;">
+
+  <!-- Header bar -->
+  <div style="background:rgba(0,0,0,.8);padding:14px 16px;padding-top:max(14px,env(safe-area-inset-top));
+    display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+    <div>
+      <div id="camOverlayTitle" style="font-size:16px;color:#f0e6d3;font-family:Georgia,serif;">📷 Scan QR Code</div>
+      <div id="camOverlaySub" style="font-size:11px;color:#7a6a5a;margin-top:2px;">Point camera at guest QR card</div>
+    </div>
+    <button onclick="closeCamOverlay()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+      border-radius:8px;color:#f0e6d3;font-size:13px;padding:8px 14px;cursor:pointer;font-family:Georgia,serif;">
+      ✕ Cancel
+    </button>
+  </div>
+
+  <!-- Camera view -->
+  <div style="flex:1;position:relative;overflow:hidden;">
+    <div id="camVidWrap" style="width:100%;height:100%;background:#000;"></div>
+
+    <!-- Scan frame -->
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+      <div style="width:65vw;max-width:280px;aspect-ratio:1;position:relative;">
+        <!-- Corners -->
+        <div id="cfTL" style="position:absolute;top:0;left:0;width:24px;height:24px;border-top:3px solid #d4af37;border-left:3px solid #d4af37;border-radius:2px 0 0 0;"></div>
+        <div id="cfTR" style="position:absolute;top:0;right:0;width:24px;height:24px;border-top:3px solid #d4af37;border-right:3px solid #d4af37;border-radius:0 2px 0 0;"></div>
+        <div id="cfBL" style="position:absolute;bottom:0;left:0;width:24px;height:24px;border-bottom:3px solid #d4af37;border-left:3px solid #d4af37;border-radius:0 0 0 2px;"></div>
+        <div id="cfBR" style="position:absolute;bottom:0;right:0;width:24px;height:24px;border-bottom:3px solid #d4af37;border-right:3px solid #d4af37;border-radius:0 0 2px 0;"></div>
+        <!-- Scan line -->
+        <div id="cfLine" style="position:absolute;left:0;right:0;height:2px;top:50%;
+          background:linear-gradient(90deg,transparent,#d4af37,transparent);
+          box-shadow:0 0 8px #d4af37;animation:scanline 2s ease-in-out infinite;"></div>
+      </div>
+      <!-- Dim overlay outside frame -->
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,.45);"></div>
+      <!-- Bright window cut-out -->
+    </div>
+
+    <!-- Flash effect -->
+    <div id="camFlashOv" style="position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .1s;"></div>
+  </div>
+
+  <!-- Status bar -->
+  <div style="background:rgba(0,0,0,.8);padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));flex-shrink:0;">
+    <div id="camOverlayStat" style="font-size:12px;color:#d4af37;text-align:center;font-family:Georgia,serif;margin-bottom:8px;">
+      📷 Starting camera…
+    </div>
+    <button onclick="fullRestartCam()" style="display:block;width:100%;padding:10px;
+      background:transparent;border:1px solid rgba(212,175,55,.35);border-radius:7px;
+      color:#d4af37;font-size:11px;letter-spacing:2px;text-transform:uppercase;
+      cursor:pointer;font-family:Georgia,serif;">
+      🔄 Restart Camera
+    </button>
+  </div>
+</div>
+
+
+
+<!-- QR MODAL -->
+<div class="mbg" id="qrMod" style="display:none" onclick="if(event.target===this)closeQR()">
+  <div class="mbox">
+    <button class="mclose" onclick="closeQR()">✕</button>
+    <div style="font-size:9px;color:#a09070;letter-spacing:3px;text-transform:uppercase;margin-bottom:5px">Family QR Code</div>
+    <div style="font-size:17px;color:var(--tx);margin-bottom:3px" id="qrNm"></div>
+    <div style="font-size:11px;color:var(--txd);margin-bottom:3px" id="qrSb"></div>
+    <div style="font-size:12px;color:var(--gold);font-family:var(--m);letter-spacing:2px;margin-bottom:4px" id="qrId"></div>
+    <div class="qrbox"><div id="qrCvs"></div></div>
+    <div style="font-size:10px;color:var(--txd);margin-bottom:16px">Present at entrance</div>
+    <div class="row" style="justify-content:center;gap:10px">
+      <button class="bsm be" onclick="dlQR()">↓ Save</button>
+      <button class="bsm be" onclick="printQR()">⎙ Print</button>
+    </div>
+  </div>
+</div>
+<div class="psheet" id="pSheet"></div>
+
+<!-- SELF TEST QR MODAL -->
+<div id="testModal" style="display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;padding:20px;
+  backdrop-filter:blur(6px);" onclick="if(event.target===this)closeTestModal()">
+  <div style="width:100%;max-width:320px;background:#111118;border:1px solid rgba(212,175,55,.3);
+    border-radius:16px;padding:26px 22px;text-align:center;position:relative;">
+    <button onclick="closeTestModal()" style="position:absolute;top:12px;right:14px;
+      background:none;border:none;color:#7a6a5a;font-size:22px;cursor:pointer;">✕</button>
+    <div style="font-size:10px;color:#d4af37;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px">Camera Self Test</div>
+    <div style="font-size:15px;color:#f0e6d3;margin-bottom:6px">Scan this QR with your camera</div>
+    <div style="font-size:11px;color:#7a6a5a;margin-bottom:16px">Point the camera at the code below to verify scanning works</div>
+    <div style="background:#fff;border-radius:10px;padding:14px;display:inline-block;margin-bottom:14px">
+      <div id="testQRCode"></div>
+    </div>
+    <div style="font-size:11px;color:#a09070;margin-bottom:18px;font-family:'Courier New',monospace;letter-spacing:1px">TEST-CAMCHECK</div>
+    <button onclick="closeTestModal()"
+      style="width:100%;padding:12px;background:transparent;border:1px solid rgba(212,175,55,.3);
+        border-radius:7px;color:#d4af37;font-size:12px;letter-spacing:2px;text-transform:uppercase;
+        cursor:pointer;font-family:Georgia,serif;">
+      Cancel Test
+    </button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN OVERLAY — all inline styles, no class dependencies -->
+<div id="loginOverlay" style="position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(135deg,#0a0a0f 0%,#1a0a1a 50%,#0a0f1a 100%);
+  display:flex;align-items:center;justify-content:center;padding:20px;font-family:Georgia,serif;">
+  <div style="width:100%;max-width:340px;background:rgba(255,255,255,.04);
+    border:1px solid rgba(212,175,55,.3);border-radius:14px;padding:32px 24px;position:relative;">
+
+    <!-- Corner decorations -->
+    <div style="position:absolute;top:9px;left:9px;width:14px;height:14px;border-top:2px solid #d4af37;border-left:2px solid #d4af37"></div>
+    <div style="position:absolute;top:9px;right:9px;width:14px;height:14px;border-top:2px solid #d4af37;border-right:2px solid #d4af37"></div>
+    <div style="position:absolute;bottom:9px;left:9px;width:14px;height:14px;border-bottom:2px solid #d4af37;border-left:2px solid #d4af37"></div>
+    <div style="position:absolute;bottom:9px;right:9px;width:14px;height:14px;border-bottom:2px solid #d4af37;border-right:2px solid #d4af37"></div>
+
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:26px">
+      <div style="font-size:10px;color:#d4af37;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Wedding Reception</div>
+      <div style="font-size:21px;color:#f0e6d3;font-weight:normal;margin-bottom:4px">Guest Entry System</div>
+      <div style="font-size:11px;color:#7a6a5a">Authorised Staff Only</div>
+    </div>
+
+    <!-- Username -->
+    <div style="font-size:9px;color:#7a6a5a;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Username</div>
+    <input id="lusr" type="text" placeholder="Enter username"
+      autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false"
+      style="width:100%;padding:12px 14px;background:rgba(255,255,255,.06);
+        border:1px solid rgba(212,175,55,.4);border-radius:7px;color:#f0e6d3;
+        font-size:15px;outline:none;font-family:Georgia,serif;margin-bottom:12px;
+        box-sizing:border-box;"
+      onkeydown="if(event.key==='Enter')document.getElementById('lpwd').focus()"
+      onfocus="this.style.borderColor='#d4af37'" onblur="this.style.borderColor='rgba(212,175,55,.4)'"/>
+
+    <!-- Password -->
+    <div style="font-size:9px;color:#7a6a5a;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Password</div>
+    <div style="position:relative;margin-bottom:12px">
+      <input id="lpwd" type="password" placeholder="Enter password"
+        autocomplete="current-password"
+        style="width:100%;padding:12px 42px 12px 14px;background:rgba(255,255,255,.06);
+          border:1px solid rgba(212,175,55,.4);border-radius:7px;color:#f0e6d3;
+          font-size:15px;outline:none;font-family:Georgia,serif;box-sizing:border-box;"
+        onkeydown="if(event.key==='Enter')doLogin()"
+        onfocus="this.style.borderColor='#d4af37'" onblur="this.style.borderColor='rgba(212,175,55,.4)'"/>
+      <button id="pwdEye" onclick="togglePwd()"
+        style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
+          background:none;border:none;color:#7a6a5a;cursor:pointer;font-size:16px;padding:4px;">👁</button>
+    </div>
+
+    <!-- Error message -->
+    <div id="loginErr" style="display:none;font-size:11px;color:#e05555;text-align:center;
+      margin-bottom:10px;padding:8px;background:rgba(224,85,85,.1);
+      border:1px solid rgba(224,85,85,.35);border-radius:6px;"></div>
+
+    <!-- Login button -->
+    <button onclick="doLogin()"
+      style="width:100%;padding:13px;background:linear-gradient(135deg,#d4af37,#b8922a);
+        border:none;border-radius:7px;color:#0a0a0f;font-size:13px;font-weight:bold;
+        letter-spacing:3px;text-transform:uppercase;cursor:pointer;font-family:Georgia,serif;">
+      🔐 Sign In
+    </button>
+
+    <!-- Attempts counter -->
+    <div id="loginAttempts" style="font-size:10px;color:#5a4a3a;text-align:center;margin-top:8px;min-height:16px"></div>
+
+    <!-- No credentials hint shown to end users -->
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+const FK='wed_f5', EK='wed_e5', WK='wed_w1';
+
+// ─── SIMPLE AUTH ───────────────────────────────
+// Load saved credentials or use defaults
+var _savedAuth = null;
+try{ _savedAuth = JSON.parse(localStorage.getItem('wed_auth1')||'null'); }catch(e){}
+var CREDS = (_savedAuth && _savedAuth.u && _savedAuth.p)
+  ? _savedAuth
+  : {u:'admin', p:'wedding2026'};
+
+function doLogin(){
+  var usr = (document.getElementById('lusr').value||'').trim().toLowerCase();
+  var pwd = (document.getElementById('lpwd').value||'').trim();
+  var errEl = document.getElementById('loginErr');
+  errEl.style.display='none';
+
+  if(!usr || !pwd){
+    errEl.textContent='Please enter username and password.';
+    errEl.style.display='block'; return;
+  }
+  if(usr === CREDS.u.toLowerCase() && pwd === CREDS.p){
+    // SUCCESS
+    sessionStorage.setItem('wed_sess','1');
+    document.getElementById('loginOverlay').style.display='none';
+    render();
+  } else {
+    errEl.textContent='Incorrect username or password.';
+    errEl.style.display='block';
+    document.getElementById('lpwd').value='';
+    document.getElementById('lpwd').focus();
+  }
+}
+
+function togglePwd(){
+  var i=document.getElementById('lpwd');
+  var e=document.getElementById('pwdEye');
+  if(i.type==='password'){i.type='text';e.textContent='🙈';}
+  else{i.type='password';e.textContent='👁';}
+}
+
+function doLogout(){
+  sessionStorage.removeItem('wed_sess');
+  document.getElementById('loginOverlay').style.display='flex';
+  document.getElementById('lusr').value='';
+  document.getElementById('lpwd').value='';
+  document.getElementById('loginErr').style.display='none';
+  stopCam();
+  setTimeout(function(){document.getElementById('lusr').focus();},100);
+}
+
+function saveCredentials(){
+  var usr=(document.getElementById('sUsr').value||'').trim();
+  var pwd=document.getElementById('sPwd').value||'';
+  var pwd2=document.getElementById('sPwd2').value||'';
+  var msg=document.getElementById('pwdMsg');
+  if(!usr){msg.textContent='Username cannot be empty.';msg.style.color='#e05555';msg.style.display='block';return;}
+  if(pwd && pwd.length<4){msg.textContent='Password must be at least 4 characters.';msg.style.color='#e05555';msg.style.display='block';return;}
+  if(pwd && pwd!==pwd2){msg.textContent='Passwords do not match.';msg.style.color='#e05555';msg.style.display='block';return;}
+  CREDS={u:usr, p:pwd||CREDS.p};
+  localStorage.setItem('wed_auth1',JSON.stringify(CREDS));
+  document.getElementById('sPwd').value='';
+  document.getElementById('sPwd2').value='';
+  msg.textContent='✓ Credentials saved!';msg.style.color='#5eb87a';msg.style.display='block';
+  toast('✓ Credentials updated');
+  setTimeout(function(){msg.style.display='none';},3000);
+}
+
+// ─── CAMERA SELF TEST ──────────────────────────
+function startSelfTest(){
+  TEST_MODE=true;
+  TEST_FAM_ID='TEST-CAMCHECK';
+  // Add temp test family (not persisted to localStorage)
+  const testFam={id:TEST_FAM_ID, name:'📷 Camera Test', table:'Test', phone:'', maxGuests:1};
+  FAM=FAM.filter(f=>f.id!==TEST_FAM_ID); // remove old if any
+  FAM.unshift(testFam);
+  STEP='testcam'; // special step
+  TAB=0;
+  [0,1,2,3].forEach(i=>document.getElementById('t'+i).classList.toggle('on',i===0));
+  render();
+}
+
+function endSelfTest(passed){
+  // Remove test family from FAM (it was never saved)
+  FAM=FAM.filter(f=>f.id!==TEST_FAM_ID);
+  // Remove any test entry from ENT
+  ENT=ENT.filter(e=>e.familyId!==TEST_FAM_ID);
+  sE();
+  TEST_MODE=false;
+  TEST_FAM_ID=null;
+  STEP='scan'; MF=null; DUP=false; VIS=1;
+  render();
+  if(passed){
+    toast('✅ Camera test passed! Ready to scan guests.');
+  } else {
+    toast('Test cancelled.');
+  }
+}
+
+let FAM=[], ENT=[];
+try{FAM=JSON.parse(localStorage.getItem(FK)||'[]')}catch(e){}
+try{ENT=JSON.parse(localStorage.getItem(EK)||'[]')}catch(e){}
+
+let WI={bride:'',groom:'',brideF:'',groomF:'',venue:'',wdate:''};
+try{Object.assign(WI,JSON.parse(localStorage.getItem(WK)||'{}'))}catch(e){}
+
+let TAB=0, STEP='scan', MF=null, DUP=false, VIS=1, LAST=ENT[0]||null;
+let PREV=[], PERR='', SMODE='camera', AMODE='in', AQR=null;
+let CS=null, CRAF=null, CON=false, LSCAN=0;
+let TEST_MODE=false, TEST_FAM_ID=null; // camera self-test state
+
+const sF=()=>localStorage.setItem(FK,JSON.stringify(FAM));
+const sE=()=>localStorage.setItem(EK,JSON.stringify(ENT));
+const sW=()=>localStorage.setItem(WK,JSON.stringify(WI));
+
+// ═══════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════
+let _uc=0;
+function uid(){
+  _uc++;
+  return 'FAM-'+Date.now().toString(36).slice(-4).toUpperCase()+_uc.toString(36).padStart(3,'0').toUpperCase();
+}
+
+const fT=ts=>new Date(ts).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+const fD=ts=>new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+const fDay=ts=>new Date(ts).getDate();
+const fMon=ts=>new Date(ts).toLocaleDateString('en-US',{month:'long'});
+const fYr=ts=>new Date(ts).getFullYear();
+const fDur=ms=>{if(!ms||ms<0)return'—';const m=Math.floor(ms/60000);if(m<1)return'<1m';if(m<60)return m+'m';return Math.floor(m/60)+'h '+(m%60?m%60+'m':'');};
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function getRemaining(e){return(e.visitors||0)-(e.exitedCount||0);}
+
+// ═══════════════════════════════════════════════
+// COUNTERS / HEADER
+// ═══════════════════════════════════════════════
+function tick(){
+  const d=fD(Date.now());
+  document.getElementById('hDate').textContent=d;
+  document.getElementById('fDate').textContent=d;
+
+  const couple=(WI.bride||WI.groom)?(WI.bride||'')+(WI.bride&&WI.groom?' & ':'')+(WI.groom||''):'';
+  document.getElementById('hTtl').textContent=couple||'Guest Entry System';
+  const meta=[];
+  if(WI.venue)meta.push('📍 '+WI.venue);
+  if(WI.wdate)meta.push('📅 '+new Date(WI.wdate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}));
+  document.getElementById('hMeta').textContent=meta.join('  ');
+
+  const totalIn=ENT.reduce((s,e)=>s+e.visitors,0);
+  const totalEx=ENT.reduce((s,e)=>s+(e.exitedCount||0),0);
+  document.getElementById('cF').textContent=ENT.length;
+  document.getElementById('cFs').textContent='of '+FAM.length;
+  document.getElementById('cG').textContent=Math.max(0,totalIn-totalEx);
+  document.getElementById('cX').textContent=totalEx;
+  document.getElementById('cR').textContent=Math.max(0,FAM.length-ENT.length);
+}
+
+// ═══════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════
+function go(n){
+  TAB=n;
+  [0,1,2,3].forEach(i=>document.getElementById('t'+i).classList.toggle('on',i===n));
+  STEP='scan';PREV=[];PERR='';
+  if(n!==0)stopCam();
+  render();
+}
+function render(){
+  tick();
+  if(TAB===0)rScan();
+  else if(TAB===1)rFam();
+  else if(TAB===2)rRep();
+  else rSet();
+}
+
+// ═══════════════════════════════════════════════
+// CAMERA OVERLAY SYSTEM
+// Camera lives in fixed #camOverlay — never inside .main
+// so innerHTML redraws NEVER kill it
+// ═══════════════════════════════════════════════
+function getVid(){ return document.getElementById('camVid'); }
+function getCvs(){ return document.getElementById('camCvs'); }
+function setOvStat(msg,col){
+  var el=document.getElementById('camOverlayStat');
+  if(el){ el.textContent=msg; el.style.color=col||'#d4af37'; }
+}
+
+function openCamOverlay(){
+  var ov=document.getElementById('camOverlay');
+  if(!ov) return;
+  ov.style.display='flex';
+
+  // Move video into the wrap div
+  var wrap=document.getElementById('camVidWrap');
+  var v=getVid();
+  if(wrap && v){
+    v.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;';
+    if(v.parentElement!==wrap) wrap.appendChild(v);
+  }
+
+  // Set overlay title based on mode
+  var title=document.getElementById('camOverlayTitle');
+  var sub=document.getElementById('camOverlaySub');
+  if(STEP==='testcam'){
+    if(title) title.textContent='📷 Camera Self Test';
+    if(sub)   sub.textContent='Scan the test QR code below';
+  } else {
+    if(title) title.textContent= AMODE==='in'?'📷 Check In Guest':'📷 Check Out Guest';
+    if(sub)   sub.textContent='Point at guest QR card';
+    // Set corner colour
+    var col=AMODE==='out'?'#7b9cff':'#d4af37';
+    ['cfTL','cfTR','cfBL','cfBR'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el){ el.style.borderColor=col; }
+    });
+    var ln=document.getElementById('cfLine');
+    if(ln){ ln.style.background='linear-gradient(90deg,transparent,'+col+',transparent)'; ln.style.boxShadow='0 0 8px '+col; }
+  }
+
+  // Start camera
+  startCam();
+}
+
+function closeCamOverlay(){
+  var ov=document.getElementById('camOverlay');
+  if(ov) ov.style.display='none';
+  stopCam();
+  if(STEP==='testcam') endSelfTest(false);
+  else { STEP='scan'; render(); }
+}
+
+function fullRestartCam(){
+  stopCam();
+  setTimeout(startCam, 300);
+}
+
+async function startCam(){
+  if(CON) return;
+  var v=getVid();
+  if(!v) return;
+
+  // jsQR check
+  if(typeof jsQR==='undefined'){
+    setOvStat('⏳ Loading scanner…','#d4af37');
+    var w2=0;
+    var t2=setInterval(function(){
+      w2+=400;
+      if(typeof jsQR!=='undefined'){ clearInterval(t2); startCam(); return; }
+      if(w2>=6000){ clearInterval(t2); setOvStat('⚠ Use ⌨ Type ID — scanner needs internet','#e05555'); }
+    },400);
+    return;
+  }
+
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    setOvStat('⚠ Camera not supported on this browser','#e05555'); return;
+  }
+
+  setOvStat('📷 Starting camera…','#d4af37');
+  try{
+    CS=await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} }
+    });
+    v.srcObject=CS;
+    v.setAttribute('playsinline','true');
+    v.muted=true;
+    await v.play();
+    CON=true;
+    setOvStat('📷 Ready — point at QR code','#d4af37');
+    scanLoop();
+  } catch(err){
+    CON=false;
+    if(CS){ try{ CS.getTracks().forEach(function(t){t.stop()}); }catch(e){} CS=null; }
+    try{ v.srcObject=null; }catch(e){}
+    var m='⚠ Camera error — tap Restart';
+    if(err.name==='NotAllowedError') m='⚠ Camera denied — allow in browser settings';
+    if(err.name==='NotFoundError')   m='⚠ No camera found on this device';
+    if(err.name==='NotReadableError')m='⚠ Camera busy — close other apps';
+    setOvStat(m,'#e05555');
+  }
+}
+
+function stopCam(){
+  CON=false;
+  if(CRAF){ cancelAnimationFrame(CRAF); CRAF=null; }
+  if(CS){ try{ CS.getTracks().forEach(function(t){t.stop()}); }catch(e){} CS=null; }
+  try{ var v2=getVid(); if(v2){ v2.pause(); v2.srcObject=null; } }catch(e){}
+}
+
+function scanLoop(){
+  if(!CON) return;
+  var v=getVid(), cvs=getCvs();
+  if(!v||!cvs){ stopCam(); return; }
+  if(v.readyState!==v.HAVE_ENOUGH_DATA||v.videoWidth===0){
+    CRAF=requestAnimationFrame(scanLoop); return;
+  }
+  try{
+    var ctx=cvs.getContext('2d',{willReadFrequently:true});
+    cvs.width=v.videoWidth; cvs.height=v.videoHeight;
+    ctx.drawImage(v,0,0,cvs.width,cvs.height);
+    var img=ctx.getImageData(0,0,cvs.width,cvs.height);
+    var code=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});
+    if(!code) code=jsQR(img.data,img.width,img.height,{inversionAttempts:'onlyInvert'});
+    if(code && code.data && Date.now()-LSCAN>1500){
+      LSCAN=Date.now(); onScan(code.data.trim()); return;
+    }
+  }catch(e){}
+  CRAF=requestAnimationFrame(scanLoop);
+}
+
+function onScan(code){
+  // Flash
+  try{
+    var fl=document.getElementById('camFlashOv');
+    if(fl){
+      fl.style.background=AMODE==='in'?'rgba(94,184,122,.4)':'rgba(123,156,255,.4)';
+      fl.style.opacity='1';
+      setTimeout(function(){ fl.style.opacity='0'; },300);
+    }
+  }catch(e){}
+  setOvStat('✓ QR Detected!','#5eb87a');
+  // Stop scanning but keep overlay open briefly so user sees the flash
+  CON=false;
+  if(CRAF){ cancelAnimationFrame(CRAF); CRAF=null; }
+  setTimeout(function(){
+    // Close overlay and process
+    var ov=document.getElementById('camOverlay');
+    if(ov) ov.style.display='none';
+    stopCam();
+    processCode(code);
+  }, 400);
+}
+
+
+// CODE PROCESSING
+// ═══════════════════════════════════════════════
+function processCode(code){
+  code=code.trim().toUpperCase();
+  const fam=FAM.find(f=>f.id.toUpperCase()===code);
+  if(!fam){MF=code;STEP='notfound';render();return;}
+
+  // Self-test: if test family scanned, go to test result
+  if(TEST_MODE && fam.id===TEST_FAM_ID){
+    STEP='testresult'; MF=fam; render(); return;
+  }
+
+  MF=fam;
+  if(AMODE==='in'){
+    DUP=!!ENT.find(e=>e.familyId===fam.id);
+    VIS=1;STEP='confirm';render();
+  }else{
+    const ent=ENT.find(e=>e.familyId===fam.id);
+    if(!ent){STEP='notchecked';render();return;}
+    if(getRemaining(ent)<=0){STEP='allexited';render();return;}
+    VIS=1;STEP='confirmexit';render();
+  }
+}
+
+// ═══════════════════════════════════════════════
+// SCANNER TAB
+// ═══════════════════════════════════════════════
+function rScan(){
+  const el=document.getElementById('main');
+  let h='';
+
+  // Last activity banner
+  if(LAST&&STEP==='scan'){
+    const isEx=LAST._la==='exit';
+    h+=`<div class="laste">
+      <div style="font-size:15px;color:${isEx?'var(--blue)':'var(--gold)'}">${isEx?'↗':'✓'}</div>
+      <div>
+        <div style="font-size:9px;color:#a09070;letter-spacing:2px;text-transform:uppercase">${isEx?'Last Exit':'Last Check-In'}</div>
+        <div style="font-size:14px">${LAST.familyName}</div>
+        <div style="font-size:10px;color:var(--txd)">${LAST.visitors} guest${LAST.visitors>1?'s':''} · ${LAST.table} · ${isEx?fT(LAST.exitTime):fT(LAST.timestamp)}</div>
+      </div>
+    </div>`;
+  }
+
+  h+=`<div class="panel"><div class="cn tl"></div><div class="cn tr"></div><div class="cn bl"></div><div class="cn br"></div>`;
+
+  // No families yet
+  if(FAM.length===0&&STEP==='scan'){
+    h+=`<div class="center">
+      <div style="font-size:36px;margin-bottom:10px">👨‍👩‍👧</div>
+      <div style="font-size:15px;margin-bottom:8px">No Families Added</div>
+      <div style="font-size:12px;color:var(--txd);margin-bottom:20px">Import your guest list from the Families tab first.</div>
+      <button class="bs" onclick="go(1)">Go to Families →</button>
+    </div>`;
+  }
+
+  // SCAN STEP
+  else if(STEP==='scan'){
+    // Check-in / Check-out toggle
+    h+=`<div class="atog">
+      <button class="abtn ai${AMODE==='in'?' on':''}" onclick="setAMode('in')">✓ Check In</button>
+      <button class="abtn ao${AMODE==='out'?' on':''}" onclick="setAMode('out')">↗ Check Out</button>
+    </div>`;
+    // Camera / Manual toggle
+    h+=`<div class="mtog">
+      <button class="mbtn${SMODE==='camera'?' on':''}" onclick="setSMode('camera')">📷 Scan QR</button>
+      <button class="mbtn${SMODE==='manual'?' on':''}" onclick="setSMode('manual')">⌨ Type ID</button>
+    </div>`;
+
+    if(SMODE==='camera'){
+      const ex=AMODE==='out';
+      h+=`
+      <button onclick="openCamOverlay()" style="
+        display:block;width:100%;padding:22px 16px;margin-bottom:12px;
+        background:rgba(0,0,0,.5);
+        border:2px solid ${ex?'rgba(123,156,255,.5)':'rgba(212,175,55,.5)'};
+        border-radius:12px;cursor:pointer;text-align:center;
+        font-family:Georgia,serif;">
+        <div style="font-size:44px;margin-bottom:8px">📷</div>
+        <div style="font-size:15px;color:#f0e6d3;margin-bottom:4px">${ex?'Tap to Scan QR — Check Out':'Tap to Scan QR — Check In'}</div>
+        <div style="font-size:11px;color:#7a6a5a">Opens camera scanner</div>
+      </button>`;
+    }else{
+      h+=`<div class="center" style="margin-bottom:14px">
+        <div style="font-size:36px;margin-bottom:5px">${AMODE==='in'?'⬡':'↗'}</div>
+        <div style="font-size:15px;margin-bottom:4px">${AMODE==='in'?'Enter Family ID to Check In':'Enter Family ID to Check Out'}</div>
+        <div style="font-size:11px;color:var(--txd);margin-bottom:14px">Type the code from the QR card</div>
+      </div>
+      <input class="cinp${AMODE==='out'?' ex':''}" id="ci" type="text" placeholder="FAM-…" maxlength="13" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="text"/>
+      ${AMODE==='in'?`<button class="bp" onclick="doManual()">Verify & Check In →</button>`:`<button class="bx" onclick="doManual()">Record Exit →</button>`}`;
+    }
+
+    // Quick select
+    h+=`<div style="margin-top:16px;border-top:1px solid rgba(255,255,255,.05);padding-top:12px">
+      <div style="font-size:9px;color:#5a4a3a;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;text-align:center">Quick Select</div>
+      <div class="qgrid">`;
+    FAM.forEach(f=>{
+      const ent=ENT.find(e=>e.familyId===f.id);
+      const rem=ent?getRemaining(ent):0;
+      const cls=ent?(rem<=0?'qo':'qi'):'qn';
+      const lbl=ent?(rem<=0?'↗':'✓'):'';
+      h+=`<button class="qb ${cls}" onclick="quickChk('${f.id}')">${f.id}${lbl}</button>`;
+    });
+    h+=`</div></div>`;
+  }
+
+  // NOT FOUND
+  else if(STEP==='notfound'){
+    h+=`<div class="center">
+      <div style="font-size:40px;margin-bottom:8px">✗</div>
+      <div style="font-size:16px;color:var(--red);margin-bottom:8px">Family Not Found</div>
+      <div style="font-size:12px;color:var(--txd);margin-bottom:22px">Code <span style="color:var(--tx);font-family:var(--m)">${MF||'?'}</span> is not on the guest list.</div>
+      <button class="bs" onclick="rst()">Try Again</button>
+    </div>`;
+  }
+
+  // ALREADY CHECKED IN (duplicate)
+  else if(STEP==='confirm'&&DUP){
+    const p=ENT.find(e=>e.familyId===MF.id);
+    const rem=p?getRemaining(p):0;
+    h+=`<div class="center">
+      <div style="font-size:34px;margin-bottom:8px">⚠</div>
+      <div style="font-size:14px;color:var(--warn);margin-bottom:5px">Already Checked In</div>
+      <div style="font-size:19px;margin-bottom:3px">${MF.name}</div>
+      <div style="font-size:12px;color:var(--txd);margin-bottom:4px">${MF.table}</div>
+      ${p?`<div style="font-size:11px;color:#5a4a3a;margin-bottom:4px">Entered: ${fT(p.timestamp)} · ${p.visitors} guest${p.visitors>1?'s':''}</div>`:''}
+      <div style="font-size:11px;color:var(--gold);margin-bottom:20px">${rem} guest${rem>1?'s':''} still inside</div>
+      <button class="bs" onclick="rst()">← Back</button>
+    </div>`;
+  }
+
+  // CONFIRM CHECK-IN
+  else if(STEP==='confirm'&&!DUP){
+    const maxG=MF.maxGuests||0;
+    const over=maxG>0&&VIS>maxG;
+    const atLim=maxG>0&&VIS===maxG;
+    const near=maxG>0&&VIS===maxG-1;
+    const overBy=over?VIS-maxG:0;
+    const limColor=over?'var(--red)':atLim?'var(--warn)':near?'var(--warn)':'var(--grn)';
+    const limStatus=over?`🚫 ${overBy} over limit!`:atLim?'⚠ At max capacity':near?'⚡ 1 spot left':'✓ Within limit';
+    // Table conflict check
+    const tConflict=ENT.find(e=>{
+      if(e.familyId===MF.id)return false;
+      return e.table&&MF.table&&e.table.trim().toLowerCase()===MF.table.trim().toLowerCase()&&getRemaining(e)>0;
+    });
+
+    h+=`<div style="font-size:9px;color:#a09070;letter-spacing:3px;text-transform:uppercase;text-align:center;margin-bottom:5px">Welcome</div>
+    <div style="font-size:21px;text-align:center;margin-bottom:3px">${MF.name}</div>
+    <div style="font-size:13px;color:var(--gold);text-align:center;margin-bottom:2px">${MF.table}</div>
+    ${MF.phone?`<div style="font-size:11px;color:var(--txd);text-align:center;margin-bottom:8px;font-family:var(--m)">${MF.phone}</div>`:''}`;
+
+    // Limit progress bar
+    if(maxG>0){
+      const pct=Math.min(100,Math.round(VIS/maxG*100));
+      h+=`<div class="pbar-wrap">
+        <div class="pbar-top">
+          <span style="font-size:9px;color:var(--txd);text-transform:uppercase;letter-spacing:1px">Guest Limit</span>
+          <span style="font-size:9px;color:${limColor};font-weight:bold">${VIS} / ${maxG}</span>
+        </div>
+        <div class="pbar-bg"><div class="pbar-fill" style="width:${pct}%;background:${limColor}"></div></div>
+        <div style="font-size:9px;text-align:center;margin-top:3px;color:${limColor}">${limStatus}</div>
+      </div>`;
+    }
+
+    // Table conflict
+    if(tConflict){
+      h+=`<div class="warn-box ww" style="margin-bottom:12px">
+        <div style="font-size:12px;color:var(--warn);font-weight:bold;margin-bottom:2px">⚠ Table Conflict!</div>
+        <div style="font-size:11px;color:#c09040">${tConflict.familyName} is already at ${MF.table}</div>
+        <div style="font-size:10px;color:#7a6a3a;margin-top:2px">${getRemaining(tConflict)} guest${getRemaining(tConflict)>1?'s':''} still inside</div>
+      </div>`;
+    }
+
+    h+=`<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;text-align:center;margin-bottom:8px">Guests Arriving</div>
+    <div class="vrow">
+      <button class="vb" onclick="chv(-1)">−</button>
+      <span class="vn" id="vn" style="color:${limColor}">${VIS}</span>
+      <button class="vb" onclick="chv(1)">+</button>
+    </div>`;
+
+    if(over){
+      h+=`<div class="warn-box wr" style="margin-bottom:12px">
+        <div style="font-size:13px;color:var(--red);font-weight:bold;margin-bottom:3px">🚫 Guest Limit Exceeded!</div>
+        <div style="font-size:11px;color:#c06060">${MF.name} is allowed max <b>${maxG}</b> guests</div>
+        <div style="font-size:11px;color:#c06060">Please reduce by <b>${overBy}</b></div>
+      </div>
+      <div class="row">
+        <button class="bg" onclick="rst()">Cancel</button>
+        <button class="bp" style="flex:2;margin-top:0;opacity:.35;cursor:not-allowed" disabled>✗ Cannot Check-In</button>
+      </div>`;
+    }else{
+      h+=`<div class="row">
+        <button class="bg" onclick="rst()">Cancel</button>
+        <button class="bp" style="flex:2;margin-top:0${atLim?';background:linear-gradient(135deg,#e0a030,#c08020)':''}" onclick="doIn()">${atLim?'⚠ Confirm at Capacity':'✓ Confirm Check-In'}</button>
+      </div>`;
+    }
+  }
+
+  // NOT CHECKED IN (for checkout)
+  else if(STEP==='notchecked'){
+    h+=`<div class="center">
+      <div style="font-size:34px;margin-bottom:8px">⚠</div>
+      <div style="font-size:14px;color:var(--warn);margin-bottom:5px">Not Checked In Yet</div>
+      <div style="font-size:19px;margin-bottom:4px">${MF?MF.name:''}</div>
+      <div style="font-size:12px;color:var(--txd);margin-bottom:22px">This family has not entered yet.</div>
+      <button class="bs" onclick="rst()">← Back</button>
+    </div>`;
+  }
+
+  // ALL GUESTS EXITED
+  else if(STEP==='allexited'){
+    const p=ENT.find(e=>e.familyId===MF.id);
+    h+=`<div class="center">
+      <div style="font-size:34px;margin-bottom:8px">↗</div>
+      <div style="font-size:14px;color:var(--blue);margin-bottom:5px">All Guests Exited</div>
+      <div style="font-size:19px;margin-bottom:3px">${MF.name}</div>
+      <div style="font-size:12px;color:var(--txd);margin-bottom:4px">All ${p?p.visitors:''} guests have left</div>
+      ${p?`<div style="font-size:10px;color:#5a4a3a;margin-bottom:22px">Entry: ${fT(p.timestamp)}</div>`:''}
+      <button class="bs" onclick="rst()">← Back</button>
+    </div>`;
+  }
+
+  // CONFIRM EXIT
+  else if(STEP==='confirmexit'){
+    const p=ENT.find(e=>e.familyId===MF.id);
+    const totalIn=p?p.visitors:0;
+    const exited=p?(p.exitedCount||0):0;
+    const rem=totalIn-exited;
+    h+=`<div style="text-align:center">
+      <div style="font-size:9px;color:var(--blue);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px">Check Out</div>
+      <div style="font-size:21px;margin-bottom:3px">${MF.name}</div>
+      <div style="font-size:13px;color:var(--gold);margin-bottom:10px">${MF.table}</div>
+      <div style="display:flex;justify-content:center;gap:14px;margin-bottom:16px;padding:11px 14px;background:rgba(0,0,0,.3);border-radius:8px;border:1px solid rgba(255,255,255,.06)">
+        <div><div style="font-size:20px;color:var(--grn)">${totalIn}</div><div style="font-size:7px;color:var(--txm);text-transform:uppercase;letter-spacing:1px">Checked In</div></div>
+        <div><div style="font-size:20px;color:var(--blue)">${exited}</div><div style="font-size:7px;color:var(--txm);text-transform:uppercase;letter-spacing:1px">Exited</div></div>
+        <div><div style="font-size:20px;color:var(--gold)">${rem}</div><div style="font-size:7px;color:var(--txm);text-transform:uppercase;letter-spacing:1px">Still Inside</div></div>
+      </div>
+      <div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">How many leaving now?</div>
+      <div class="vrow">
+        <button class="vb" onclick="chvX(-1)">−</button>
+        <span class="vn" id="vx" style="color:var(--blue)">${VIS}</span>
+        <button class="vb" onclick="chvX(1,${rem})">+</button>
+      </div>
+      <div style="font-size:10px;color:var(--txd);margin-bottom:14px">${rem-VIS} will remain inside</div>
+      <div class="row">
+        <button class="bg" onclick="rst()">Cancel</button>
+        <button class="bx" style="flex:2;margin-top:0" onclick="doOut()">↗ Confirm Exit (${VIS})</button>
+      </div>
+    </div>`;
+  }
+
+  // CHECK-IN SUCCESS
+  else if(STEP==='donein'){
+    const fam=FAM.find(f=>f.id===(LAST?LAST.familyId:''));
+    const atLim=fam&&fam.maxGuests&&LAST&&LAST.visitors>=fam.maxGuests;
+    h+=`<div class="center">
+      <div class="tick tg">✓</div>
+      <div style="font-size:16px;color:var(--grn);margin-bottom:6px;animation:fadeUp .4s .2s both">Checked In Successfully</div>
+      ${LAST?`
+      <div style="font-size:19px;margin-bottom:3px;animation:fadeUp .4s .3s both">${LAST.familyName}</div>
+      <div style="font-size:12px;color:var(--txd);margin-bottom:3px;animation:fadeUp .4s .33s both">${LAST.table} · ${LAST.visitors} guest${LAST.visitors>1?'s':''}</div>
+      ${atLim?`<div style="font-size:10px;color:var(--warn);margin-bottom:3px;animation:fadeUp .4s .36s both">⚠ Table at full capacity</div>`:''}
+      <div style="font-size:10px;color:#5a4a3a;margin-bottom:24px;animation:fadeUp .4s .4s both">Entry: ${fT(LAST.timestamp)}</div>`:''}
+      <button class="bp" style="width:auto;padding:11px 32px" onclick="rst()">Next Guest →</button>
+    </div>`;
+  }
+
+  // CHECK-OUT SUCCESS
+  else if(STEP==='doneout'){
+    const totalIn=LAST?LAST.visitors:0;
+    const exited=LAST?(LAST.exitedCount||0):0;
+    const stillIn=totalIn-exited;
+    h+=`<div class="center">
+      <div class="tick tb">↗</div>
+      <div style="font-size:16px;color:var(--blue);margin-bottom:6px;animation:fadeUp .4s .2s both">Exit Recorded</div>
+      ${LAST?`
+      <div style="font-size:19px;margin-bottom:8px;animation:fadeUp .4s .3s both">${LAST.familyName}</div>
+      <div style="display:flex;justify-content:center;gap:12px;margin-bottom:12px;padding:10px;background:rgba(0,0,0,.3);border-radius:8px;border:1px solid rgba(255,255,255,.05);animation:fadeUp .4s .32s both">
+        <div><div style="font-size:18px;color:var(--grn)">${totalIn}</div><div style="font-size:7px;color:var(--txm);text-transform:uppercase">Total In</div></div>
+        <div><div style="font-size:18px;color:var(--blue)">${exited}</div><div style="font-size:7px;color:var(--txm);text-transform:uppercase">Exited</div></div>
+        <div><div style="font-size:18px;color:var(--gold)">${stillIn}</div><div style="font-size:7px;color:var(--txm);text-transform:uppercase">Still Inside</div></div>
+      </div>
+      <div style="font-size:14px;color:${stillIn===0?'var(--blue)':'var(--gold)'};margin-bottom:22px;animation:fadeUp .4s .4s both">
+        ${stillIn===0?'✓ All guests have exited':stillIn+' guest'+(stillIn>1?'s':'')+' still inside'}
+      </div>`:''}
+      <button class="bx" style="width:auto;padding:11px 32px" onclick="rst()">Next Guest →</button>
+    </div>`;
+  }
+
+  // ── SELF TEST: CAMERA + QR SIDE BY SIDE ──
+  else if(STEP==='testcam'){
+    h+=`<div class="center" style="margin-bottom:12px">
+      <div style="font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase">📷 Camera Self Test</div>
+      <div style="font-size:12px;color:var(--txd);margin-top:4px">Point your camera at the QR code below</div>
+    </div>`;
+
+    // Test camera — opens overlay automatically
+    h+=`<button onclick="openCamOverlay()" style="
+      display:block;width:100%;padding:18px;margin-bottom:12px;
+      background:rgba(0,0,0,.5);border:2px solid rgba(212,175,55,.5);
+      border-radius:12px;cursor:pointer;text-align:center;font-family:Georgia,serif;">
+      <div style="font-size:36px;margin-bottom:6px">📷</div>
+      <div style="font-size:14px;color:#f0e6d3;">Tap to Open Camera</div>
+      <div style="font-size:11px;color:#7a6a5a;margin-top:3px">Then scan the test QR below</div>
+    </button>`;
+
+    // Test QR code to scan
+    h+=`<div style="background:#fff;border-radius:10px;padding:14px;display:inline-block;margin:0 auto 12px;display:flex;justify-content:center">
+      <div id="testQRInline"></div>
+    </div>
+    <div style="font-size:10px;color:var(--txm);text-align:center;margin-bottom:14px;font-family:var(--m)">TEST-CAMCHECK</div>
+    <button class="bg" style="width:100%" onclick="endSelfTest(false)">✕ Cancel Test</button>`;
+  }
+
+  // ── SELF TEST RESULT ──
+  else if(STEP==='testresult'){
+    h+=`<div class="center">
+      <div style="font-size:60px;margin-bottom:12px;animation:tickIn .5s cubic-bezier(.175,.885,.32,1.275)">✅</div>
+      <div style="font-size:18px;color:var(--grn);margin-bottom:8px;animation:fadeUp .4s .2s both">Camera is Working!</div>
+      <div style="font-size:13px;color:var(--txd);margin-bottom:6px;animation:fadeUp .4s .3s both">QR code detected successfully.</div>
+      <div style="font-size:12px;color:var(--txd);margin-bottom:24px;animation:fadeUp .4s .35s both">Your scanner is ready for the wedding day.</div>
+      <div style="animation:fadeUp .4s .4s both">
+        <button class="bp" style="width:auto;padding:12px 32px;margin-bottom:10px" onclick="endSelfTest(true)">✓ Done — Close Test</button>
+      </div>
+    </div>`;
+  }
+
+  h+=`</div>`;
+  el.innerHTML=h;
+
+  // ── Camera button — opens the camera overlay ──
+  if(STEP==='scan'||STEP==='testcam'){
+    if(SMODE==='camera'||STEP==='testcam'){
+      // nothing to wire up — camera overlay button handles it
+    } else {
+      stopCam();
+      var inp=document.getElementById('ci');
+      if(inp){
+        setTimeout(function(){inp.focus();},100);
+        inp.addEventListener('keydown',function(ev){if(ev.key==='Enter')doManual();});
+      }
+    }
+  } else {
+    if(TAB!==0) stopCam();
+  }
+}
+
+function setSMode(m){if(m==='manual')stopCam();SMODE=m;render();}
+function setAMode(m){stopCam();AMODE=m;render();}
+function chv(d){VIS=Math.max(1,VIS+d);if(STEP==='confirm')render();else{const e=document.getElementById('vn');if(e)e.textContent=VIS;}}
+function chvX(d,max){VIS=Math.max(1,Math.min(max||99,VIS+d));if(STEP==='confirmexit')render();}
+
+function doManual(){
+  const inp=document.getElementById('ci');
+  const code=(inp?inp.value:'').trim().toUpperCase();
+  if(!code)return;
+  processCode(code);
+}
+
+function quickChk(id){
+  const fam=FAM.find(f=>f.id===id);
+  if(!fam)return;
+  MF=fam;
+  if(AMODE==='in'){
+    DUP=!!ENT.find(e=>e.familyId===id);VIS=1;STEP='confirm';render();
+  }else{
+    const ent=ENT.find(e=>e.familyId===id);
+    if(!ent){STEP='notchecked';render();return;}
+    if(getRemaining(ent)<=0){STEP='allexited';render();return;}
+    VIS=1;STEP='confirmexit';render();
+  }
+}
+
+function doIn(){
+  if(DUP||!MF)return;
+  if(MF.maxGuests&&VIS>MF.maxGuests){toast('⚠ Cannot check in — exceeds limit of '+MF.maxGuests);return;}
+  const e={id:Date.now(),familyId:MF.id,familyName:MF.name,table:MF.table,phone:MF.phone||'',
+    visitors:VIS,timestamp:Date.now(),exitTime:null,exitedCount:0,exitEvents:[],_la:'in'};
+  ENT.unshift(e);LAST=e;sE();STEP='donein';render();
+}
+
+function doOut(){
+  if(!MF)return;
+  const idx=ENT.findIndex(e=>e.familyId===MF.id);
+  if(idx<0)return;
+  const n=VIS||1;
+  ENT[idx].exitedCount=(ENT[idx].exitedCount||0)+n;
+  if(!ENT[idx].exitEvents)ENT[idx].exitEvents=[];
+  ENT[idx].exitEvents.push({count:n,time:Date.now()});
+  if(ENT[idx].exitedCount>=ENT[idx].visitors){
+    ENT[idx].exitedCount=ENT[idx].visitors;
+    ENT[idx].exitTime=Date.now();
+  }
+  ENT[idx]._la='exit';
+  LAST=ENT[idx];sE();STEP='doneout';render();
+}
+
+function rst(){
+  if(TEST_MODE){ endSelfTest(false); return; }
+  STEP='scan'; MF=null; DUP=false; VIS=1;
+  render();
+  // Camera restart handled by wire-up in render()
+}
+
+// ═══════════════════════════════════════════════
+// FAMILIES TAB
+// ═══════════════════════════════════════════════
+function rFam(){
+  const el=document.getElementById('main');
+  let h='';
+
+  h+=`<div class="panel">
+    <div class="cn tl"></div><div class="cn tr"></div><div class="cn bl"></div><div class="cn br"></div>
+    <div style="font-size:9px;color:#a09070;letter-spacing:3px;text-transform:uppercase;margin-bottom:12px">📥 Import Guest List via CSV</div>
+    <div class="tbox">
+      <div class="tbox-t">Required CSV format — headers must match exactly</div>
+      <div class="tbox-c">name,phone,table,maxGuests
+The Johnson Family,+1 555 0101,Table 1,4
+The Williams Family,+1 555 0102,Table 2,6</div>
+      <button class="bsm be" style="margin-top:9px;width:100%;display:block" onclick="dlTpl()">↓ Download Template CSV</button>
+    </div>
+    <div class="drop" id="dz" onclick="document.getElementById('fi').click()">
+      <input style="display:none" type="file" id="fi" accept=".csv,text/csv" onchange="onFile(this)">
+      <div style="font-size:28px;margin-bottom:6px">📂</div>
+      <div style="font-size:14px;color:var(--tx);margin-bottom:3px">Tap to select CSV file</div>
+      <div style="font-size:11px;color:var(--txd)">or drag & drop here</div>
+    </div>`;
+
+  if(PERR){
+    const isWarn=PERR.startsWith('⚠');
+    h+=`<div style="padding:9px 12px;border-radius:6px;font-size:11px;margin-bottom:10px;
+      background:${isWarn?'rgba(224,160,48,.1)':'rgba(224,85,85,.1)'};
+      border:1px solid ${isWarn?'rgba(224,160,48,.4)':'rgba(224,85,85,.3)'};
+      color:${isWarn?'var(--warn)':'var(--red)'}">${PERR}</div>`;
+  }
+
+  if(PREV.length>0){
+    h+=`<div style="font-size:10px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px">${PREV.length} new famil${PREV.length!==1?"ies":"y"} ready to import${PERR?" (duplicates excluded)":""}</div>
+    <div class="pvw"><table>
+      <thead><tr><th>Name</th><th>Phone</th><th>Table</th><th>Max</th></tr></thead>
+      <tbody>${PREV.slice(0,5).map(r=>`<tr><td>${r.name}</td><td style="font-family:var(--m)">${r.phone||'—'}</td><td>${r.table||'—'}</td><td>${r.maxGuests||'—'}</td></tr>`).join('')}
+      ${PREV.length>5?`<tr><td colspan="4" style="color:var(--txd);text-align:center">…and ${PREV.length-5} more</td></tr>`:''}</tbody>
+    </table></div>
+    <div class="row">
+      <button class="bg" onclick="PREV=[];PERR='';render()">Cancel</button>
+      <button class="bp" style="flex:2;margin-top:0" onclick="doImport()">✓ Import ${PREV.length} Families</button>
+    </div>`;
+  }
+  h+=`</div>`;
+
+  if(FAM.length===0){
+    h+=`<div class="empty">No families yet.<br>Upload a CSV above to get started.</div>`;
+  }else{
+    h+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:12px;color:var(--txd)">${FAM.length} families on guest list</div>
+      <div style="display:flex;gap:6px">
+        <button class="bsm be" onclick="printAll()">⎙ All QR</button>
+        <button class="bsm bc" onclick="clearFam()">✗ Clear</button>
+      </div>
+    </div>`;
+    FAM.forEach((f,i)=>{
+      const ent=ENT.find(e=>e.familyId===f.id);
+      const rem=ent?getRemaining(ent):0;
+      const bcls=ent?(rem<=0?'bo':'bi'):'bp2';
+      const blbl=ent?(rem<=0?'↗ Exited':'✓ In'):'Pending';
+      const full=f.maxGuests&&ent&&rem>=f.maxGuests&&rem>0;
+      // Table conflict
+      const tc=ENT.find(e=>e.familyId!==f.id&&e.table&&f.table&&e.table.trim().toLowerCase()===f.table.trim().toLowerCase()&&getRemaining(e)>0);
+      h+=`<div class="fc">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:10px;color:var(--gold);font-family:var(--m);letter-spacing:1px;margin-bottom:2px">${f.id}</div>
+            <div style="font-size:14px;color:var(--tx)">${f.name}</div>
+            ${f.phone?`<div style="font-size:11px;color:#a09070;font-family:var(--m);margin-top:1px">📞 ${f.phone}</div>`:''}
+            <div style="font-size:11px;color:var(--txd);margin-top:2px">${f.table}${f.maxGuests?' · Max '+f.maxGuests+' guests':''}${tc?` <span style="color:var(--warn)">· ⚠ Table conflict</span>`:''}
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+            <span class="badge ${bcls}">${blbl}</span>
+            ${full?`<span class="badge bf">🚫 Full</span>`:''}
+            <button class="bsm bq" onclick="showQR(${i})">⬛ QR</button>
+            <button class="bd" onclick="delFam(${i})">✕</button>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  el.innerHTML=h;
+
+  const dz=document.getElementById('dz');
+  if(dz){
+    dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('ov');});
+    dz.addEventListener('dragleave',()=>dz.classList.remove('ov'));
+    dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('ov');if(e.dataTransfer.files[0])parseCSV(e.dataTransfer.files[0]);});
+  }
+}
+
+function onFile(inp){if(inp.files[0])parseCSV(inp.files[0]);inp.value='';}
+function parseCSVLine(line){
+  const r=[];let cur='',q=false;
+  for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){q=!q;}else if(c===','&&!q){r.push(cur);cur='';}else{cur+=c;}}
+  r.push(cur);return r.map(s=>s.replace(/^"|"$/g,'').trim());
+}
+function parseCSV(file){
+  const rd=new FileReader();
+  rd.onload=e=>{
+    const lines=e.target.result.split(/\r?\n/).filter(l=>l.trim());
+    if(lines.length<2){PERR='CSV needs a header row and at least one data row.';PREV=[];render();return;}
+    const hdr=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/['"]/g,''));
+    const ni=hdr.indexOf('name'),pi=hdr.indexOf('phone'),ti=hdr.indexOf('table'),mi=hdr.indexOf('maxguests');
+    if(ni===-1){PERR='Missing column "name". Check your CSV headers.';PREV=[];render();return;}
+    const rows=[];
+    const seenNames=new Set();   // track names within the CSV file
+    const dupesInFile=[];
+
+    for(let i=1;i<lines.length;i++){
+      const cols=parseCSVLine(lines[i]);
+      const name=(cols[ni]||'').trim();if(!name)continue;
+      const nameLower=name.toLowerCase();
+
+      // Check duplicate within the CSV being imported
+      if(seenNames.has(nameLower)){
+        dupesInFile.push(name);
+        continue; // skip the duplicate row
+      }
+      seenNames.add(nameLower);
+
+      const rowId='FAM-'+Date.now().toString(36).slice(-4).toUpperCase()+i.toString(36).padStart(3,'0').toUpperCase();
+      rows.push({id:rowId,name,phone:pi>=0?(cols[pi]||'').trim():'',table:ti>=0?(cols[ti]||'').trim():'',maxGuests:mi>=0?parseInt(cols[mi])||0:0});
+    }
+    if(!rows.length){PERR='No valid rows found.';PREV=[];render();return;}
+
+    // Check against already-imported families
+    const dupesWithExisting=rows.filter(r=>
+      FAM.some(f=>f.name.toLowerCase()===r.name.toLowerCase())
+    ).map(r=>r.name);
+
+    // Build warning message
+    let warnMsg='';
+    if(dupesInFile.length>0)
+      warnMsg+='⚠ Duplicates skipped from CSV: '+dupesInFile.join(', ')+'. ';
+    if(dupesWithExisting.length>0)
+      warnMsg+='⚠ Already in guest list: '+dupesWithExisting.join(', ')+'.';
+
+    if(warnMsg) PERR=warnMsg;
+    else PERR='';
+
+    // Remove rows that already exist in FAM
+    const finalRows=rows.filter(r=>
+      !FAM.some(f=>f.name.toLowerCase()===r.name.toLowerCase())
+    );
+
+    if(!finalRows.length){
+      PERR='⚠ All families in this CSV already exist in the guest list. No new entries to import.';
+      PREV=[];render();return;
+    }
+    PREV=finalRows;render();
+  };
+  rd.readAsText(file);
+}
+function doImport(){FAM=[...FAM,...PREV];PREV=[];PERR='';sF();render();toast('✓ '+FAM.length+' families on guest list');}
+function delFam(i){if(!confirm('Remove "'+FAM[i].name+'"?'))return;FAM.splice(i,1);sF();render();}
+function clearFam(){if(!confirm('Remove ALL families? Check-in data stays.'))return;FAM=[];sF();render();}
+function dlTpl(){
+  const c='name,phone,table,maxGuests\nThe Johnson Family,+1 555 0101,Table 1,4\nThe Williams Family,+1 555 0102,Table 2,6\nThe Brown Family,+44 7700 900123,Table 3,5\n';
+  const b=new Blob([c],{type:'text/csv'});const u=URL.createObjectURL(b);
+  const a=document.createElement('a');a.href=u;a.download='wedding_guest_template.csv';a.click();URL.revokeObjectURL(u);
+}
+
+// ═══════════════════════════════════════════════
+// QR MODAL
+// ═══════════════════════════════════════════════
+function showQR(i){
+  const f=FAM[i];if(!f)return;AQR=f;
+  document.getElementById('qrNm').textContent=f.name;
+  document.getElementById('qrSb').textContent=f.table+(f.maxGuests?' · Max '+f.maxGuests+' guests':'');
+  document.getElementById('qrId').textContent=f.id;
+  const box=document.getElementById('qrCvs');box.innerHTML='';
+  if(typeof QRCode!=='undefined'){
+    new QRCode(box,{text:f.id,width:175,height:175,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+  }else{box.innerHTML='<div style="color:#888;font-size:11px;padding:20px">QR generator needs internet</div>';}
+  document.getElementById('qrMod').style.display='flex';
+}
+function closeQR(){document.getElementById('qrMod').style.display='none';AQR=null;}
+function dlQR(){
+  const canvas=document.querySelector('#qrCvs canvas');
+  if(!canvas){toast('QR not ready');return;}
+  const W=270,H=330,c=document.createElement('canvas');c.width=W;c.height=H;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle='#0a0a0f';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='#d4af37';ctx.lineWidth=2;ctx.strokeRect(9,9,W-18,H-18);
+  const cs=14;ctx.lineWidth=3;
+  [[13,13],[W-13-cs,13],[13,H-13-cs],[W-13-cs,H-13-cs]].forEach(([x,y])=>{
+    ctx.beginPath();
+    if(x<W/2&&y<H/2){ctx.moveTo(x+cs,y);ctx.lineTo(x,y);ctx.lineTo(x,y+cs);}
+    else if(x>W/2&&y<H/2){ctx.moveTo(x,y);ctx.lineTo(x+cs,y);ctx.lineTo(x+cs,y+cs);}
+    else if(x<W/2&&y>H/2){ctx.moveTo(x,y+cs);ctx.lineTo(x,y);ctx.lineTo(x+cs,y);}
+    else{ctx.moveTo(x+cs,y+cs);ctx.lineTo(x+cs,y);ctx.lineTo(x,y);}
+    ctx.stroke();
+  });
+  ctx.fillStyle='#fff';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(47,47,176,176,8);else ctx.rect(47,47,176,176);ctx.fill();
+  ctx.drawImage(canvas,47,47,176,176);
+  ctx.fillStyle='#d4af37';ctx.font='bold 10px Georgia';ctx.textAlign='center';ctx.fillText('WEDDING RECEPTION',W/2,36);
+  ctx.fillStyle='#f0e6d3';ctx.font='12px Georgia';
+  const nm=AQR?AQR.name:'';ctx.fillText(nm.length>28?nm.slice(0,26)+'…':nm,W/2,242);
+  ctx.fillStyle='#d4af37';ctx.font='11px Courier New';ctx.fillText(AQR?AQR.id:'',W/2,260);
+  ctx.fillStyle='#7a6a5a';ctx.font='10px Georgia';ctx.fillText(AQR?AQR.table:'',W/2,276);
+  ctx.fillStyle='#4a3a2a';ctx.font='9px Georgia';ctx.fillText('Present this QR at the entrance',W/2,298);
+  const url=c.toDataURL('image/png');
+  const a=document.createElement('a');a.href=url;a.download='qr_'+(AQR?AQR.id:'family')+'.png';a.click();
+  toast('QR saved!');
+}
+function printQR(){if(!AQR)return;buildPrint([AQR]);setTimeout(()=>window.print(),300);}
+function printAll(){if(!FAM.length){toast('No families');return;}buildPrint(FAM);setTimeout(()=>window.print(),600);}
+function buildPrint(fams){
+  const s=document.getElementById('pSheet');
+  s.innerHTML=`<div style="padding:16px;font-family:Georgia,serif"><h2 style="text-align:center;margin-bottom:18px;color:#333">Wedding Reception — Guest QR Codes</h2>
+  <div id="pCards" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center"></div></div>`;
+  const cards=document.getElementById('pCards');
+  fams.forEach(f=>{
+    const card=document.createElement('div');
+    card.style.cssText='border:1px solid #ccc;border-radius:8px;padding:13px;width:195px;text-align:center;page-break-inside:avoid';
+    card.innerHTML=`<div style="font-size:11px;font-weight:bold;margin-bottom:2px">${f.name}</div>
+      <div style="font-size:9px;color:#888;margin-bottom:4px">${f.table}${f.maxGuests?' · Max '+f.maxGuests:''}</div>
+      <div id="pq_${f.id}" style="display:inline-block;margin:5px 0"></div>
+      <div style="font-size:10px;color:#b8922a;font-family:monospace;margin-top:3px">${f.id}</div>
+      ${f.phone?`<div style="font-size:9px;color:#888;margin-top:2px">${f.phone}</div>`:''}`;
+    cards.appendChild(card);
+    setTimeout(()=>{try{if(typeof QRCode!=='undefined')new QRCode(document.getElementById('pq_'+f.id),{text:f.id,width:125,height:125,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});}catch(e){}},60);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// REPORT TAB
+// ═══════════════════════════════════════════════
+function rRep(){
+  const totalIn=ENT.reduce((s,e)=>s+e.visitors,0);
+  const totalEx=ENT.reduce((s,e)=>s+(e.exitedCount||0),0);
+  const el=document.getElementById('main');
+  let h=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:13px">
+    <div>
+      <div style="font-size:9px;color:#a09070;letter-spacing:3px;text-transform:uppercase;margin-bottom:2px">Entry Log</div>
+      <div style="font-size:17px;color:#f8f0e0">${ENT.length} Families · ${totalIn} In · ${totalEx} Exited</div>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="bsm be" ${ENT.length===0?'disabled':''} onclick="expCSV()">↓ CSV</button>
+      <button class="bsm bc" ${ENT.length===0?'disabled':''} onclick="clrEnt()">✗ Clear</button>
+    </div>
+  </div>`;
+
+  if(ENT.length===0){
+    h+=`<div class="empty">No entries yet.<br>Check in guests from the Check-In tab.</div>`;
+  }else{
+    ENT.forEach((e,i)=>{
+      const f=FAM.find(f=>f.id===e.familyId);
+      const over=f&&f.maxGuests&&e.visitors>f.maxGuests;
+      const rem=getRemaining(e);
+      const hasEx=!!e.exitTime;
+      // Table conflict for report
+      const tc=ENT.find(o=>o.familyId!==e.familyId&&o.table&&e.table&&o.table.trim().toLowerCase()===e.table.trim().toLowerCase()&&getRemaining(o)>0&&rem>0);
+      h+=`<div class="ec ${i===0?'en':hasEx?'ex2':'eo'}">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;flex:1;min-width:0">
+            <div style="width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;margin-right:10px;${hasEx?'background:rgba(123,156,255,.1);border:1px solid rgba(123,156,255,.3);color:var(--blue)':'background:rgba(212,175,55,.1);border:1px solid var(--gdim);color:var(--gold)'}">${hasEx?'↗':'✓'}</div>
+            <div style="min-width:0">
+              <div style="font-size:13px;color:var(--tx)">${e.familyName}</div>
+              <div style="font-size:10px;color:#6a5a4a">${e.familyId} · ${e.table}${tc?` <span style="color:var(--warn)">· ⚠ conflict</span>`:''}</div>
+              ${e.phone?`<div style="font-size:10px;color:#6a5a4a;font-family:var(--m)">${e.phone}</div>`:''}
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:12px;color:var(--gold)">${e.visitors} guest${e.visitors>1?'s':''}</div>
+            ${over?`<div style="font-size:9px;padding:1px 6px;border-radius:6px;background:rgba(224,85,85,.12);color:var(--red);border:1px solid rgba(224,85,85,.3);margin-top:2px">🚫 +${e.visitors-f.maxGuests}</div>`:''}
+          </div>
+        </div>
+        <!-- Time strip -->
+        <div class="ts-row">
+          <span class="ts ti">▶ ${fT(e.timestamp)}</span>
+          ${(e.exitedCount||0)>0?`<span class="ts to">↗ ${e.exitedCount} exited</span>`:''}
+          ${rem>0?`<span class="ts td">${rem} inside</span>`:''}
+          ${rem===0&&(e.exitedCount||0)>0?`<span class="ts to">all exited</span>`:''}
+          ${(e.exitedCount||0)===0?`<span style="font-size:9px;color:var(--txm);align-self:center">all inside</span>`:''}
+        </div>
+      </div>`;
+    });
+
+    const pend=FAM.filter(f=>!ENT.find(e=>e.familyId===f.id));
+    if(pend.length>0){
+      h+=`<div class="slbl">Not Yet Arrived (${pend.length})</div>`;
+      pend.forEach(f=>{
+        h+=`<div style="padding:8px 13px;border-radius:6px;margin-bottom:4px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between;opacity:.44">
+          <div>
+            <div style="font-size:12px;color:var(--txd)">${f.name}</div>
+            ${f.phone?`<div style="font-size:10px;color:#5a4a3a;font-family:var(--m)">${f.phone}</div>`:''}
+          </div>
+          <span style="font-size:11px;color:#5a4a3a;align-self:center">${f.table}</span>
+        </div>`;
+      });
+    }
+  }
+  el.innerHTML=h;
+}
+
+// ─── SELF TEST MODAL OPEN/CLOSE ────────────────
+function openSelfTest(){
+  // Go directly to scanner with test QR shown on screen
+  startSelfTest();
+}
+
+function closeTestModal(){
+  const modal=document.getElementById('testModal');
+  if(modal) modal.style.display='none';
+}
+
+function expCSV(){
+  const q=v=>'"'+String(v||'').replace(/"/g,'""')+'"';
+
+  function lastExitTs(e){
+    if(e.exitEvents&&e.exitEvents.length>0) return e.exitEvents[e.exitEvents.length-1].time;
+    if(e.exitTime) return e.exitTime;
+    return null;
+  }
+
+  const wi=[];
+  if(WI.bride||WI.groom) wi.push('Wedding:,'+q((WI.bride||'')+(WI.bride&&WI.groom?' & ':'')+(WI.groom||'')));
+  if(WI.brideF) wi.push("Bride's Family:,"+q(WI.brideF));
+  if(WI.groomF) wi.push("Groom's Family:,"+q(WI.groomF));
+  if(WI.venue)  wi.push('Venue:,'+q(WI.venue));
+  if(WI.wdate)  wi.push('Wedding Date:,'+q(new Date(WI.wdate+'T00:00:00').toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})));
+  wi.push('Exported:,'+q(new Date().toLocaleString()));
+  wi.push('');
+
+  const cols=[
+    'Family ID','Family Name','Table','Phone',
+    'Total Guests','Exited','Still Inside',
+    'Entry Day','Entry Month','Entry Year','Entry Time',
+    'Exit Day','Exit Month','Exit Year','Exit Time',
+    'Duration (mins)','Status'
+  ];
+
+  const rows=ENT.map(e=>{
+    const ed=e.timestamp;
+    const lxd=lastExitTs(e);
+    const rem=e.visitors-(e.exitedCount||0);
+    const status=rem<=0?'All Exited':(e.exitedCount||0)>0?'Partial Exit':'Still Inside';
+    const dur=lxd?Math.round((lxd-ed)/60000):'';
+    return [
+      q(e.familyId), q(e.familyName), q(e.table||''), q(e.phone||''),
+      e.visitors, e.exitedCount||0, rem,
+      fDay(ed), q(fMon(ed)), fYr(ed), q(fT(ed)),
+      lxd?fDay(lxd):'', lxd?q(fMon(lxd)):'', lxd?fYr(lxd):'', lxd?q(fT(lxd)):'',
+      dur, q(status)
+    ].join(',');
+  });
+
+  const couple=(WI.bride||WI.groom)?(WI.bride||'')+(WI.bride&&WI.groom?'_&_':'')+(WI.groom||''):'Wedding';
+  const fname=couple.replace(/\s+/g,'_')+'_Guest_Report.csv';
+  const content=wi.join('\n')+cols.join(',')+'\n'+rows.join('\n');
+  const b=new Blob(['\uFEFF'+content],{type:'text/csv;charset=utf-8;'});
+  const u=URL.createObjectURL(b);
+  const a=document.createElement('a');a.href=u;a.download=fname;a.click();URL.revokeObjectURL(u);
+  toast('✓ Report exported!');
+}
+function clrEnt(){if(confirm('Clear all check-in entries? Family list stays.')){ENT=[];LAST=null;sE();render();}}
+
+// ═══════════════════════════════════════════════
+// SETTINGS TAB
+// ═══════════════════════════════════════════════
+function rSet(){
+  const el=document.getElementById('main');
+  const couple=(WI.bride||WI.groom)?(WI.bride||'')+(WI.bride&&WI.groom?' & ':'')+(WI.groom||''):'';
+  const wdateFmt=WI.wdate?new Date(WI.wdate+'T00:00:00').toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}):'';
+
+  let h='';
+  h+='<div class="panel">';
+  h+='<div class="cn tl"></div><div class="cn tr"></div><div class="cn bl"></div><div class="cn br"></div>';
+  h+='<div style="font-size:9px;color:#a09070;letter-spacing:3px;text-transform:uppercase;margin-bottom:16px">💍 Wedding Details</div>';
+
+  h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Bride\'s Name</div>';
+  h+='<input class="sinp" id="sBr" type="text" placeholder="e.g. Aisha" value="'+escH(WI.bride||'')+'" oninput="WI.bride=this.value;sW();tick()"/>';
+
+  h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Groom\'s Name</div>';
+  h+='<input class="sinp" id="sGr" type="text" placeholder="e.g. Rahul" value="'+escH(WI.groom||'')+'" oninput="WI.groom=this.value;sW();tick()"/>';
+
+  h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Bride\'s Family Name</div>';
+  h+='<input class="sinp" id="sBF" type="text" placeholder="e.g. The Khan Family" value="'+escH(WI.brideF||'')+'" oninput="WI.brideF=this.value;sW()"/>';
+
+  h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Groom\'s Family Name</div>';
+  h+='<input class="sinp" id="sGF" type="text" placeholder="e.g. The Sharma Family" value="'+escH(WI.groomF||'')+'" oninput="WI.groomF=this.value;sW()"/>';
+
+  h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Venue / Palace Name</div>';
+  h+='<input class="sinp" id="sVn" type="text" placeholder="e.g. Royal Palace Banquet Hall" value="'+escH(WI.venue||'')+'" oninput="WI.venue=this.value;sW();tick()"/>';
+
+  h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Wedding Date</div>';
+  h+='<input class="sinp" id="sDt" type="date" value="'+escH(WI.wdate||'')+'" oninput="WI.wdate=this.value;sW();tick()"/>';
+
+  if(couple){
+    h+='<div style="margin-top:8px;padding:13px;background:var(--gfaint);border:1px solid var(--gdim);border-radius:8px;text-align:center">';
+    h+='<div style="font-size:9px;color:#a09070;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Preview</div>';
+    h+='<div style="font-size:17px;color:var(--tx);margin-bottom:3px">'+escH(couple)+'</div>';
+    if(WI.brideF||WI.groomF) h+='<div style="font-size:11px;color:var(--txd);margin-bottom:2px">'+escH((WI.brideF||'')+(WI.brideF&&WI.groomF?' · ':'')+(WI.groomF||''))+'</div>';
+    if(WI.venue) h+='<div style="font-size:11px;color:var(--gold)">📍 '+escH(WI.venue)+'</div>';
+    if(wdateFmt) h+='<div style="font-size:11px;color:var(--txd);margin-top:2px">📅 '+escH(wdateFmt)+'</div>';
+    h+='</div>';
+  }
+  h+='</div>';
+
+  // Security panel
+  h+='<div class="panel" style="margin-top:4px">';
+  h+='<div class="cn tl"></div><div class="cn tr"></div><div class="cn bl"></div><div class="cn br"></div>';
+  h+='<div style="font-size:9px;color:#a09070;letter-spacing:3px;text-transform:uppercase;margin-bottom:16px">🔐 Security</div>';
+
+  h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Username</div>';
+  h+='<input class="sinp" id="sUsr" type="text" placeholder="Username" autocorrect="off" autocapitalize="off" value="'+escH(CREDS.u||'')+'" />';
+
+  h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">New Password</div>';
+  h+='<input class="sinp" id="sPwd" type="password" placeholder="Enter new password" autocomplete="new-password"/>';
+
+  h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Confirm New Password</div>';
+  h+='<input class="sinp" id="sPwd2" type="password" placeholder="Repeat new password" autocomplete="new-password"/>';
+
+  h+='<div id="pwdMsg" style="font-size:11px;margin-bottom:8px;min-height:16px"></div>';
+  h+='<button class="bp" style="margin-top:0" onclick="saveCredentials()">💾 Save Credentials</button>';
+
+  h+='<div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.06)">';
+  h+='<button class="bp" style="background:linear-gradient(135deg,#5577ee,#3355cc);margin-top:0;margin-bottom:10px" onclick="openSelfTest()">📷 Test Camera Scanner</button>';
+  h+='<button class="bp" style="background:linear-gradient(135deg,#e05555,#b83030);margin-top:0" onclick="doLogout()">🚪 Sign Out</button>';
+  h+='</div>';
+  h+='<div style="font-size:10px;color:var(--txm);text-align:center;margin-top:10px">Session active · Expires when browser closes</div>';
+  h+='</div>';
+
+  el.innerHTML=h;
+}
+
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function saveCredentials(){
+  var usr=(document.getElementById('sUsr').value||'').trim();
+  var pwd=document.getElementById('sPwd').value||'';
+  var pwd2=document.getElementById('sPwd2').value||'';
+  var msg=document.getElementById('pwdMsg');
+  if(!usr){msg.textContent='Username cannot be empty.';msg.style.color='#e05555';msg.style.display='block';return;}
+  if(pwd && pwd.length<4){msg.textContent='Password must be at least 4 characters.';msg.style.color='#e05555';msg.style.display='block';return;}
+  if(pwd && pwd!==pwd2){msg.textContent='Passwords do not match.';msg.style.color='#e05555';msg.style.display='block';return;}
+  CREDS={u:usr, p:pwd||CREDS.p};
+  localStorage.setItem('wed_auth1',JSON.stringify(CREDS));
+  document.getElementById('sPwd').value='';
+  document.getElementById('sPwd2').value='';
+  msg.textContent='✓ Credentials saved!';msg.style.color='#5eb87a';msg.style.display='block';
+  toast('✓ Credentials updated');
+  setTimeout(function(){msg.style.display='none';},3000);
+}
+
+// ═══════════════════════════════════════════════
+if(sessionStorage.getItem('wed_sess')==='1'){
+  document.getElementById('loginOverlay').style.display='none';
+  render();
+}else{
+  setTimeout(function(){
+    var u=document.getElementById('lusr');
+    if(u) u.focus();
+  },200);
+}
+</script>
+</body>
+</html>
