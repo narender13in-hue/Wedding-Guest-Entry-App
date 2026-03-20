@@ -1,0 +1,2090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Wedding Entry"/>
+<link rel="manifest" href="manifest.json"/>
+<title>Wedding Entry</title>
+<script>
+function loadScript(urls){var i=0;function next(){if(i>=urls.length)return;var s=document.createElement('script');s.src=urls[i++];s.onerror=next;document.head.appendChild(s);}next();}
+loadScript(['https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js','https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js']);
+loadScript(['https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js','https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js','https://unpkg.com/jsqr@1.4.0/dist/jsQR.js']);
+loadScript(['https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js']);
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --gold:#d4af37;--gdim:rgba(212,175,55,.25);--gfaint:rgba(212,175,55,.08);
+  --bg:#0a0a0f;--sur:rgba(255,255,255,.03);
+  --tx:#f0e6d3;--txd:#7a6a5a;--txm:#4a3a2a;
+  --red:#e05555;--warn:#e0a030;--grn:#5eb87a;--blue:#7b9cff;
+  --f:'Georgia','Times New Roman',serif;--m:'Courier New',monospace;
+}
+body.light-mode{
+  --bg:#f5f0e8;--sur:rgba(0,0,0,.03);
+  --tx:#2a1a0a;--txd:#7a6a5a;--txm:#aaa090;
+  --gdim:rgba(180,140,20,.3);--gfaint:rgba(180,140,20,.08);
+}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--f);overscroll-behavior:none}
+body{display:flex;flex-direction:column;min-height:100vh;min-height:-webkit-fill-available}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at 20% 20%,rgba(212,175,55,.05)0%,transparent 60%),
+             radial-gradient(ellipse at 80% 80%,rgba(100,50,150,.05)0%,transparent 60%)}
+.app{display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1}
+.hdr{background:rgba(0,0,0,.65);backdrop-filter:blur(12px);border-bottom:1px solid var(--gdim);
+  padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top));flex-shrink:0}
+body.light-mode .hdr{background:rgba(245,240,232,.92)}
+.hdr-ttl{font-size:17px;color:#f8f0e0;font-weight:normal}
+body.light-mode .hdr-ttl{color:#2a1a0a}
+.hdr-sub{font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase}
+.hdr-meta{font-size:10px;color:var(--txm);margin-top:1px;font-style:italic}
+.tabs{display:flex;background:rgba(0,0,0,.4);border-bottom:1px solid rgba(212,175,55,.15);flex-shrink:0;overflow-x:auto}
+body.light-mode .tabs{background:rgba(245,240,232,.7)}
+.tab{flex:1;min-width:60px;padding:9px 2px;text-align:center;font-size:9px;letter-spacing:.5px;text-transform:uppercase;
+  font-family:var(--f);color:var(--txd);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tab.on{color:var(--gold);border-bottom-color:var(--gold);background:var(--gfaint)}
+.ctrs{display:flex;border-bottom:1px solid rgba(212,175,55,.1);background:rgba(0,0,0,.3);flex-shrink:0}
+body.light-mode .ctrs{background:rgba(245,240,232,.5)}
+.ctr{flex:1;padding:7px 2px;text-align:center;border-right:1px solid rgba(212,175,55,.1)}
+.ctr:last-child{border-right:none}
+.cv{font-size:19px;color:var(--gold);line-height:1}
+.cs{font-size:8px;color:#5a4a3a}
+.cl{font-size:7px;color:var(--txm);letter-spacing:.5px;text-transform:uppercase;margin-top:1px}
+.main{flex:1;overflow-y:auto;padding:14px;padding-bottom:max(14px,env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+.panel{background:var(--sur);border:1px solid var(--gdim);border-radius:12px;padding:20px 16px;position:relative;margin-bottom:14px}
+.cn{position:absolute;width:13px;height:13px}
+.cn.tl{top:8px;left:8px;border-top:2px solid var(--gold);border-left:2px solid var(--gold)}
+.cn.tr{top:8px;right:8px;border-top:2px solid var(--gold);border-right:2px solid var(--gold)}
+.cn.bl{bottom:8px;left:8px;border-bottom:2px solid var(--gold);border-left:2px solid var(--gold)}
+.cn.br{bottom:8px;right:8px;border-bottom:2px solid var(--gold);border-right:2px solid var(--gold)}
+@keyframes scanline{0%{top:10%}50%{top:85%}100%{top:10%}}
+@keyframes tickIn{0%{transform:scale(.4);opacity:0}65%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+.tick{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  margin:0 auto 14px;font-size:32px;animation:tickIn .5s cubic-bezier(.175,.885,.32,1.275)}
+.tick.tg{background:rgba(94,184,122,.12);border:2px solid var(--grn);color:var(--grn)}
+.tick.tb{background:rgba(123,156,255,.12);border:2px solid var(--blue);color:var(--blue)}
+.mtog{display:flex;background:rgba(0,0,0,.3);border:1px solid rgba(212,175,55,.2);border-radius:8px;margin-bottom:10px;overflow:hidden}
+.mbtn{flex:1;padding:9px 4px;text-align:center;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-family:var(--f);color:var(--txd);border:none;background:none;cursor:pointer}
+.mbtn.on{background:var(--gfaint);color:var(--gold)}
+.atog{display:flex;gap:8px;margin-bottom:12px}
+.abtn{flex:1;padding:10px 4px;text-align:center;font-size:11px;text-transform:uppercase;font-family:var(--f);border-radius:8px;cursor:pointer;border:none}
+.abtn.ai{background:rgba(94,184,122,.12);border:1px solid rgba(94,184,122,.3);color:var(--grn)}
+.abtn.ai.on{background:rgba(94,184,122,.25);border-color:var(--grn)}
+.abtn.ao{background:rgba(123,156,255,.08);border:1px solid rgba(123,156,255,.25);color:var(--blue)}
+.abtn.ao.on{background:rgba(123,156,255,.2);border-color:var(--blue)}
+.cinp{width:100%;padding:12px;background:rgba(255,255,255,.05);border:1px solid rgba(212,175,55,.4);
+  border-radius:6px;color:var(--tx);font-size:20px;text-align:center;letter-spacing:4px;
+  text-transform:uppercase;outline:none;font-family:var(--m);caret-color:var(--gold)}
+.sinp{width:100%;padding:11px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(212,175,55,.3);
+  border-radius:6px;color:var(--tx);font-size:14px;outline:none;font-family:var(--f);margin-bottom:10px;caret-color:var(--gold)}
+body.light-mode .sinp{background:rgba(255,255,255,.6);color:#2a1a0a}
+.sinp:focus{border-color:var(--gold)}
+.srch{width:100%;padding:9px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(212,175,55,.2);
+  border-radius:20px;color:var(--tx);font-size:13px;outline:none;font-family:var(--f);caret-color:var(--gold);margin-bottom:10px}
+body.light-mode .srch{background:rgba(255,255,255,.6);color:#2a1a0a}
+.srch:focus{border-color:var(--gold)}
+.bp{display:block;width:100%;padding:13px;margin-top:10px;background:linear-gradient(135deg,#d4af37,#b8922a);
+  border:none;border-radius:6px;color:#0a0a0f;font-size:13px;font-weight:bold;letter-spacing:3px;
+  text-transform:uppercase;cursor:pointer;font-family:var(--f)}
+.bp:active{opacity:.82}
+.bp:disabled{opacity:.3;cursor:not-allowed}
+.bx{display:block;width:100%;padding:13px;margin-top:10px;background:linear-gradient(135deg,#7b9cff,#5577ee);
+  border:none;border-radius:6px;color:#fff;font-size:13px;font-weight:bold;letter-spacing:3px;
+  text-transform:uppercase;cursor:pointer;font-family:var(--f)}
+.bs{padding:10px 18px;background:transparent;border:1px solid var(--gdim);border-radius:6px;
+  color:var(--gold);font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:var(--f)}
+.bg{padding:11px;flex:1;background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:6px;
+  color:var(--txd);font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:var(--f)}
+.bsm{padding:6px 12px;border-radius:4px;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-family:var(--f);cursor:pointer;border:none}
+.be{background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.4)!important;color:var(--gold)}
+.bc{background:transparent;border:1px solid rgba(200,50,50,.3)!important;color:var(--red)}
+.bq{background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3)!important;color:var(--gold);font-size:9px;padding:3px 8px}
+.bd{background:transparent;border:1px solid rgba(200,50,50,.25)!important;color:var(--red);font-size:9px;padding:3px 8px}
+.bedit{background:rgba(123,156,255,.1);border:1px solid rgba(123,156,255,.3)!important;color:var(--blue);font-size:9px;padding:3px 8px}
+.vrow{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:18px}
+.vb{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid var(--gdim);color:var(--gold);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.vn{font-size:44px;color:var(--tx);min-width:60px;text-align:center}
+.pbar-wrap{margin:0 auto 12px;max-width:260px}
+.pbar-top{display:flex;justify-content:space-between;margin-bottom:4px}
+.pbar-bg{background:rgba(255,255,255,.08);border-radius:20px;height:7px;overflow:hidden}
+.pbar-fill{height:100%;border-radius:20px}
+.qgrid{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+.qb{padding:4px 8px;border-radius:4px;cursor:pointer;font-size:10px;font-family:var(--m)}
+.qb.qi{background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.4);color:var(--gold)}
+.qb.qo{background:rgba(123,156,255,.1);border:1px solid rgba(123,156,255,.3);color:var(--blue)}
+.qb.qn{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--txd)}
+.fc{padding:12px 14px;border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07)}
+.ec{padding:11px 14px;border-radius:8px;margin-bottom:8px}
+.ec.en{background:var(--gfaint);border:1px solid var(--gdim)}
+.ec.eo{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07)}
+.ec.ex2{background:rgba(123,156,255,.04);border:1px solid rgba(123,156,255,.18)}
+.badge{font-size:9px;padding:2px 7px;border-radius:10px}
+.bi{background:rgba(94,184,122,.15);color:var(--grn);border:1px solid rgba(94,184,122,.3)}
+.bo{background:rgba(123,156,255,.12);color:var(--blue);border:1px solid rgba(123,156,255,.3)}
+.bp2{background:rgba(255,255,255,.04);color:var(--txm);border:1px solid rgba(255,255,255,.08)}
+.bf{background:rgba(224,85,85,.12);color:var(--red);border:1px solid rgba(224,85,85,.3)}
+.ts-row{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.ts{font-size:9px;padding:2px 7px;border-radius:10px}
+.ts.ti{background:rgba(94,184,122,.1);color:var(--grn);border:1px solid rgba(94,184,122,.22)}
+.ts.to{background:rgba(123,156,255,.1);color:var(--blue);border:1px solid rgba(123,156,255,.22)}
+.ts.td{background:rgba(212,175,55,.08);color:var(--gold);border:1px solid rgba(212,175,55,.18)}
+.warn-box{padding:10px 13px;border-radius:8px;margin-bottom:12px;text-align:center}
+.warn-box.ww{background:rgba(224,160,48,.1);border:1px solid rgba(224,160,48,.4)}
+.warn-box.wr{background:rgba(224,85,85,.1);border:1px solid rgba(224,85,85,.4)}
+.drop{border:2px dashed rgba(212,175,55,.3);border-radius:10px;padding:24px 16px;text-align:center;cursor:pointer;margin-bottom:10px}
+.drop.ov{border-color:var(--gold);background:var(--gfaint)}
+.tbox{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:12px;margin-bottom:10px}
+.tbox-t{font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.tbox-c{font-family:var(--m);font-size:11px;color:#a09070;line-height:1.7;white-space:pre;overflow-x:auto}
+.pvw{overflow-x:auto;margin-bottom:10px;border-radius:8px;border:1px solid rgba(212,175,55,.2)}
+.pvw table{width:100%;border-collapse:collapse;font-size:11px}
+.pvw th{padding:6px 9px;background:rgba(212,175,55,.1);color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-size:9px;text-align:left;border-bottom:1px solid rgba(212,175,55,.2)}
+.pvw td{padding:6px 9px;color:var(--tx);border-bottom:1px solid rgba(255,255,255,.04)}
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)}
+.mbox{background:#111118;border:1px solid var(--gdim);border-radius:16px;padding:26px 20px;max-width:360px;width:100%;position:relative;text-align:center;max-height:90vh;overflow-y:auto}
+body.light-mode .mbox{background:#f5f0e8}
+.mclose{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--txd);font-size:22px;cursor:pointer}
+.qrbox{background:#fff;border-radius:10px;padding:13px;display:inline-block;margin:14px 0}
+.psheet{display:none}
+@media print{body>*{display:none!important}.psheet{display:block!important;background:#fff}}
+.slbl{font-size:9px;color:#5a4a3a;letter-spacing:2px;text-transform:uppercase;margin:12px 0 7px}
+.row{display:flex;gap:10px}
+.center{text-align:center}
+.empty{text-align:center;padding:40px 20px;border:1px solid rgba(212,175,55,.1);border-radius:12px;color:#5a4a3a;font-size:13px}
+.laste{display:flex;align-items:center;gap:11px;padding:11px 13px;margin-bottom:13px;background:var(--gfaint);border:1px solid var(--gdim);border-radius:8px}
+.ibnr{margin:0 14px 10px;padding:10px 13px;background:rgba(212,175,55,.08);border:1px solid var(--gdim);border-radius:8px;display:none;align-items:center;gap:10px}
+.itxt{flex:1;font-size:11px;color:#c0a860;line-height:1.5}
+.footer{border-top:1px solid rgba(212,175,55,.08);padding:8px 16px;padding-bottom:max(8px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;background:rgba(0,0,0,.4);flex-shrink:0}
+body.light-mode .footer{background:rgba(245,240,232,.8)}
+.ftr{font-size:9px;color:var(--txm);letter-spacing:1px;text-transform:uppercase}
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:rgba(12,12,12,.96);border:1px solid var(--gdim);border-radius:8px;padding:9px 16px;font-size:12px;color:var(--tx);z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+.mfood-wrap{background:rgba(0,0,0,.3);border:1px solid rgba(212,175,55,.2);border-radius:10px;padding:12px 14px;margin-bottom:14px}
+.mfood-title{font-size:9px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;text-align:center}
+.mfood-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:7px 10px;border-radius:7px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07)}
+.mfood-lbl{font-size:12px;color:var(--tx)}
+.mfood-btns{display:flex;gap:6px}
+.mfbtn{padding:5px 11px;border-radius:5px;font-size:10px;cursor:pointer;border:none;font-family:var(--f)}
+.mfbtn.veg{background:rgba(94,184,122,.1);border:1px solid rgba(94,184,122,.25)!important;color:#5eb87a}
+.mfbtn.veg.sel{background:rgba(94,184,122,.28);border-color:#5eb87a!important;font-weight:bold}
+.mfbtn.nv{background:rgba(224,100,50,.08);border:1px solid rgba(224,100,50,.22)!important;color:#e07050}
+.mfbtn.nv.sel{background:rgba(224,100,50,.25);border-color:#e05555!important;color:#e05555;font-weight:bold}
+/* Event selector pill row */
+.evpill{padding:6px 12px;border-radius:20px;font-size:11px;font-family:var(--f);cursor:pointer;border:1px solid rgba(212,175,55,.3);background:rgba(212,175,55,.06);color:var(--txd)}
+.evpill.on{background:rgba(212,175,55,.18);color:var(--gold);border-color:var(--gold)}
+/* Theme chips */
+.thchip{padding:7px 13px;border-radius:8px;font-size:11px;font-family:var(--f);cursor:pointer;border:1px solid rgba(212,175,55,.25);background:rgba(255,255,255,.03);color:var(--txd);text-align:center}
+.thchip.on{border-color:var(--gold);color:var(--gold);background:var(--gfaint)}
+/* Filter chips */
+.fchip{padding:5px 12px;border-radius:14px;font-size:10px;font-family:var(--f);cursor:pointer;border:1px solid rgba(212,175,55,.2);background:rgba(255,255,255,.03);color:var(--txd)}
+.fchip.on{background:rgba(212,175,55,.15);color:var(--gold);border-color:var(--gold)}
+/* Chart canvas */
+.chartbox{background:rgba(0,0,0,.2);border:1px solid rgba(212,175,55,.12);border-radius:10px;padding:12px;margin-bottom:10px}
+body.light-mode .chartbox{background:rgba(255,255,255,.4)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hdr">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between">
+      <div>
+        <div class="hdr-sub" id="hSub">Wedding Reception</div>
+        <div class="hdr-ttl" id="hTtl">Guest Entry System</div>
+        <div class="hdr-meta" id="hMeta"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="font-size:10px;color:var(--txm)" id="hDate"></div>
+        <button onclick="toggleTheme()" style="background:none;border:none;color:var(--gold);font-size:16px;cursor:pointer;padding:2px" title="Toggle theme" id="themeBtn">☀️</button>
+      </div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab on" id="t0" onclick="go(0)">&#x2B21; Check-In</button>
+    <button class="tab" id="t1" onclick="go(1)">Families</button>
+    <button class="tab" id="t2" onclick="go(2)">Report</button>
+    <button class="tab" id="t3" onclick="go(3)">Dashboard</button>
+    <button class="tab" id="t4" onclick="go(4)">Settings</button>
+  </div>
+  <div class="ctrs">
+    <div class="ctr"><div class="cv" id="cF">0</div><div class="cs" id="cFs">of 0</div><div class="cl">Checked In</div></div>
+    <div class="ctr"><div class="cv" id="cG">0</div><div class="cs">&nbsp;</div><div class="cl">Inside Now</div></div>
+    <div class="ctr"><div class="cv" id="cX">0</div><div class="cs">&nbsp;</div><div class="cl">Exited</div></div>
+    <div class="ctr"><div class="cv" id="cR">0</div><div class="cs">&nbsp;</div><div class="cl">Remaining</div></div>
+  </div>
+  <div id="iBnr" class="ibnr">
+    <div class="itxt" id="iTxt"></div>
+    <button style="background:none;border:none;color:var(--txd);font-size:18px;cursor:pointer;flex-shrink:0" onclick="document.getElementById('iBnr').style.display='none'">&#x2715;</button>
+  </div>
+  <div class="main" id="main"></div>
+  <div class="footer">
+    <div class="ftr" id="footEvt">Wedding Entry</div>
+    <div class="ftr" id="fDate"></div>
+  </div>
+</div>
+<video id="camVid" playsinline muted style="display:none"></video>
+<canvas id="camCvs" style="display:none"></canvas>
+<!-- CAMERA OVERLAY -->
+<div id="camOverlay" style="display:none;position:fixed;inset:0;z-index:300;background:#000;flex-direction:column">
+  <div style="background:rgba(0,0,0,.8);padding:14px 16px;padding-top:max(14px,env(safe-area-inset-top));display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div><div id="camTitle" style="font-size:16px;color:#f0e6d3;font-family:Georgia,serif">Scan QR Code</div>
+    <div id="camSub" style="font-size:11px;color:#7a6a5a;margin-top:2px">Point camera at guest QR card</div></div>
+    <button onclick="closeCamOverlay()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;color:#f0e6d3;font-size:13px;padding:8px 14px;cursor:pointer;font-family:Georgia,serif">&#x2715; Cancel</button>
+  </div>
+  <div style="flex:1;position:relative;overflow:hidden">
+    <div id="camVidWrap" style="width:100%;height:100%;background:#000"></div>
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
+      <div style="width:65vw;max-width:280px;aspect-ratio:1;position:relative">
+        <div id="cfTL" style="position:absolute;top:0;left:0;width:24px;height:24px;border-top:3px solid #d4af37;border-left:3px solid #d4af37"></div>
+        <div id="cfTR" style="position:absolute;top:0;right:0;width:24px;height:24px;border-top:3px solid #d4af37;border-right:3px solid #d4af37"></div>
+        <div id="cfBL" style="position:absolute;bottom:0;left:0;width:24px;height:24px;border-bottom:3px solid #d4af37;border-left:3px solid #d4af37"></div>
+        <div id="cfBR" style="position:absolute;bottom:0;right:0;width:24px;height:24px;border-bottom:3px solid #d4af37;border-right:3px solid #d4af37"></div>
+        <div id="cfLine" style="position:absolute;left:0;right:0;height:2px;top:50%;background:linear-gradient(90deg,transparent,#d4af37,transparent);box-shadow:0 0 8px #d4af37;animation:scanline 2s ease-in-out infinite"></div>
+      </div>
+    </div>
+    <div id="camFlashOv" style="position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .1s"></div>
+  </div>
+  <div style="background:rgba(0,0,0,.8);padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));flex-shrink:0">
+    <div id="camOverlayStat" style="font-size:12px;color:#d4af37;text-align:center;font-family:Georgia,serif;margin-bottom:8px">Starting camera...</div>
+    <button onclick="fullRestartCam()" style="display:block;width:100%;padding:10px;background:transparent;border:1px solid rgba(212,175,55,.35);border-radius:7px;color:#d4af37;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:Georgia,serif">&#x1F504; Restart Camera</button>
+  </div>
+</div>
+<!-- QR MODAL -->
+<div class="mbg" id="qrMod" style="display:none" onclick="if(event.target===this)closeQR()">
+  <div class="mbox">
+    <button class="mclose" onclick="closeQR()">&#x2715;</button>
+    <div style="font-size:9px;color:#a09070;letter-spacing:3px;text-transform:uppercase;margin-bottom:5px">Family QR Code</div>
+    <div style="font-size:17px;color:var(--tx);margin-bottom:3px" id="qrNm"></div>
+    <div style="font-size:11px;color:var(--txd);margin-bottom:3px" id="qrSb"></div>
+    <div style="font-size:12px;color:var(--gold);font-family:var(--m);letter-spacing:2px;margin-bottom:4px" id="qrId"></div>
+    <div class="qrbox"><div id="qrCvs"></div></div>
+    <div style="font-size:10px;color:var(--txd);margin-bottom:16px">Present at entrance</div>
+    <div class="row" style="justify-content:center;gap:10px">
+      <button class="bsm be" onclick="dlQR()">&#x2193; Save</button>
+      <button class="bsm be" onclick="printQR()">Print</button>
+    </div>
+  </div>
+</div>
+<!-- EDIT ENTRY MODAL -->
+<div class="mbg" id="editMod" style="display:none" onclick="if(event.target===this)closeEdit()">
+  <div class="mbox" style="text-align:left">
+    <button class="mclose" onclick="closeEdit()">&#x2715;</button>
+    <div style="font-size:9px;color:#a09070;letter-spacing:3px;text-transform:uppercase;margin-bottom:5px">Edit Check-In Entry</div>
+    <div id="editBody"></div>
+  </div>
+</div>
+<div class="psheet" id="pSheet"></div>
+<!-- LOGIN OVERLAY -->
+<!-- ═══════════════════════════════════════════
+     LOGIN OVERLAY  |  id: login-overlay-root
+     Panels:
+       login-panel-signin   — main sign-in
+  Version: WED-LOGIN-v4
+═══════════════════════════════════════════ -->
+<div id="login-overlay-root" style="position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0a0a0f,#1a0a1a,#0a0f1a);display:flex;align-items:center;justify-content:center;padding:16px;font-family:Georgia,serif;overflow-y:auto">
+  <div id="login-card" style="width:100%;max-width:340px;background:rgba(255,255,255,.04);border:1px solid rgba(212,175,55,.3);border-radius:14px;padding:28px 22px;position:relative">
+    <div style="position:absolute;top:9px;left:9px;width:12px;height:12px;border-top:2px solid #d4af37;border-left:2px solid #d4af37"></div>
+    <div style="position:absolute;top:9px;right:9px;width:12px;height:12px;border-top:2px solid #d4af37;border-right:2px solid #d4af37"></div>
+    <div style="position:absolute;bottom:9px;left:9px;width:12px;height:12px;border-bottom:2px solid #d4af37;border-left:2px solid #d4af37"></div>
+    <div style="position:absolute;bottom:9px;right:9px;width:12px;height:12px;border-bottom:2px solid #d4af37;border-right:2px solid #d4af37"></div>
+
+    <!-- ─── PANEL 1: SIGN IN  |  id: login-panel-signin ─── -->
+    <div id="login-panel-signin">
+      <div id="login-header" style="text-align:center;margin-bottom:22px">
+        <div style="font-size:10px;color:#d4af37;letter-spacing:3px;text-transform:uppercase;margin-bottom:5px">Guest Entry System</div>
+        <div id="loginTitle" style="font-size:20px;color:#f0e6d3;font-weight:normal;margin-bottom:3px">Wedding Reception</div>
+        <div style="font-size:11px;color:#7a6a5a">Authorised Staff Only</div>
+      </div>
+      <label style="display:block;font-size:9px;color:#7a6a5a;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Username</label>
+      <input id="lusr" type="text" placeholder="Enter username" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false"
+        style="width:100%;padding:11px 13px;background:rgba(255,255,255,.06);border:1px solid rgba(212,175,55,.4);border-radius:7px;color:#f0e6d3;font-size:15px;outline:none;font-family:Georgia,serif;margin-bottom:10px;box-sizing:border-box"
+        onkeydown="if(event.key==='Enter')document.getElementById('lpwd').focus()"/>
+      <label style="display:block;font-size:9px;color:#7a6a5a;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Password</label>
+      <div style="position:relative;margin-bottom:5px">
+        <input id="lpwd" type="password" placeholder="Enter password" autocomplete="current-password"
+          style="width:100%;padding:11px 40px 11px 13px;background:rgba(255,255,255,.06);border:1px solid rgba(212,175,55,.4);border-radius:7px;color:#f0e6d3;font-size:15px;outline:none;font-family:Georgia,serif;box-sizing:border-box"
+          onkeydown="if(event.key==='Enter')doLogin()"/>
+        <button id="pwdEye" onclick="togglePwd()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#7a6a5a;cursor:pointer;font-size:16px;padding:4px">&#x1F441;</button>
+      </div>
+      <div id="login-err" style="display:none;font-size:11px;color:#e05555;text-align:center;margin-bottom:10px;padding:8px;background:rgba(224,85,85,.1);border:1px solid rgba(224,85,85,.35);border-radius:6px"></div>
+      <div id="login-attempts-warn" style="display:none;font-size:10px;color:#e0a030;text-align:center;margin-bottom:8px;padding:6px 10px;background:rgba(224,160,48,.08);border:1px solid rgba(224,160,48,.28);border-radius:6px"></div>
+      <button id="login-signin-btn" onclick="doLogin()" style="width:100%;padding:13px;background:linear-gradient(135deg,#d4af37,#b8922a);border:none;border-radius:7px;color:#0a0a0f;font-size:13px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;cursor:pointer;font-family:Georgia,serif">Sign In</button>
+      <div style="text-align:center;margin-top:12px">
+        <button onclick="showChangePwdPanel()" style="background:none;border:none;color:#7a6a5a;font-size:11px;cursor:pointer;font-family:Georgia,serif;text-decoration:underline;padding:0">Forgot password?</button>
+      </div>
+    </div><!-- end login-panel-signin -->
+
+    <!-- ─── PANEL 2: CHANGE PASSWORD  |  id: login-panel-changepwd ─── -->
+    <div id="login-panel-changepwd" style="display:none">
+      <!-- Header with back arrow -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+        <button onclick="showLoginPanel()" style="background:none;border:none;color:#d4af37;font-size:22px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#x2190;</button>
+        <div>
+          <div style="font-size:17px;color:#f0e6d3">Change Password</div>
+          <div style="font-size:11px;color:#7a6a5a;margin-top:2px">Verify current credentials to set a new password</div>
+        </div>
+      </div>
+      <!-- Username -->
+      <label style="display:block;font-size:9px;color:#7a6a5a;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Username</label>
+      <input id="cp-username" type="text" placeholder="Enter your username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        style="width:100%;padding:11px 13px;background:rgba(255,255,255,.06);border:1px solid rgba(212,175,55,.35);border-radius:7px;color:#f0e6d3;font-size:14px;outline:none;font-family:Georgia,serif;margin-bottom:10px;box-sizing:border-box"
+        onkeydown="if(event.key==='Enter')document.getElementById('cp-current').focus()"/>
+      <!-- Current password -->
+      <label style="display:block;font-size:9px;color:#7a6a5a;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Current Password</label>
+      <div style="position:relative;margin-bottom:10px">
+        <input id="cp-current" type="password" placeholder="Enter current password" autocomplete="current-password"
+          style="width:100%;padding:11px 40px 11px 13px;background:rgba(255,255,255,.06);border:1px solid rgba(212,175,55,.35);border-radius:7px;color:#f0e6d3;font-size:14px;outline:none;font-family:Georgia,serif;box-sizing:border-box"
+          onkeydown="if(event.key==='Enter')document.getElementById('cp-new').focus()"/>
+        <button onclick="(function(){var i=document.getElementById('cp-current');i.type=i.type==='password'?'text':'password';})()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#7a6a5a;cursor:pointer;font-size:15px;padding:3px">&#x1F441;</button>
+      </div>
+      <!-- New password -->
+      <label style="display:block;font-size:9px;color:#7a6a5a;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">New Password</label>
+      <div style="position:relative;margin-bottom:10px">
+        <input id="cp-new" type="password" placeholder="Enter new password (min 4 chars)" autocomplete="new-password"
+          style="width:100%;padding:11px 40px 11px 13px;background:rgba(255,255,255,.06);border:1px solid rgba(212,175,55,.35);border-radius:7px;color:#f0e6d3;font-size:14px;outline:none;font-family:Georgia,serif;box-sizing:border-box"
+          onkeydown="if(event.key==='Enter')document.getElementById('cp-confirm').focus()"/>
+        <button onclick="(function(){var i=document.getElementById('cp-new');i.type=i.type==='password'?'text':'password';})()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#7a6a5a;cursor:pointer;font-size:15px;padding:3px">&#x1F441;</button>
+      </div>
+      <!-- Confirm new password -->
+      <label style="display:block;font-size:9px;color:#7a6a5a;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Confirm New Password</label>
+      <div style="position:relative;margin-bottom:10px">
+        <input id="cp-confirm" type="password" placeholder="Repeat new password" autocomplete="new-password"
+          style="width:100%;padding:11px 40px 11px 13px;background:rgba(255,255,255,.06);border:1px solid rgba(212,175,55,.35);border-radius:7px;color:#f0e6d3;font-size:14px;outline:none;font-family:Georgia,serif;box-sizing:border-box"
+          onkeydown="if(event.key==='Enter')doChangePassword()"/>
+        <button onclick="(function(){var i=document.getElementById('cp-confirm');i.type=i.type==='password'?'text':'password';})()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#7a6a5a;cursor:pointer;font-size:15px;padding:3px">&#x1F441;</button>
+      </div>
+      <!-- Error / success message -->
+      <div id="cp-err" style="display:none;font-size:11px;color:#e05555;text-align:center;margin-bottom:10px;padding:8px;background:rgba(224,85,85,.1);border:1px solid rgba(224,85,85,.35);border-radius:6px"></div>
+      <div id="cp-ok" style="display:none;font-size:11px;color:#5eb87a;text-align:center;margin-bottom:10px;padding:8px;background:rgba(94,184,122,.08);border:1px solid rgba(94,184,122,.3);border-radius:6px"></div>
+      <!-- Submit button -->
+      <button onclick="doChangePassword()" style="width:100%;padding:13px;background:linear-gradient(135deg,#d4af37,#b8922a);border:none;border-radius:7px;color:#0a0a0f;font-size:13px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;cursor:pointer;font-family:Georgia,serif">Update Password</button>
+
+      <!-- Silent emergency reset — no label, no hint, code known only to owner -->
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.06);display:flex;gap:8px;align-items:center">
+        <input id="cp-reset-code" type="password" maxlength="4" inputmode="numeric" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;" autocomplete="off"
+          style="flex:1;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:7px;color:#5a4a3a;font-size:18px;text-align:center;letter-spacing:8px;outline:none;font-family:Courier New,monospace;box-sizing:border-box"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+          onkeydown="if(event.key==='Enter')doSecretReset()"/>
+        <button onclick="doSecretReset()" style="padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:7px;color:#5a4a3a;font-size:11px;cursor:pointer;font-family:var(--f,Georgia,serif)">&#x21BA;</button>
+      </div>
+      <div id="cp-reset-err" style="display:none;font-size:10px;color:var(--red,#e05555);text-align:center;margin-top:6px;padding:5px;background:rgba(224,85,85,.08);border:1px solid rgba(224,85,85,.2);border-radius:5px"></div>
+    </div><!-- end login-panel-changepwd -->
+
+  </div>
+</div><!-- end login-overlay-root -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+var FK='wed_f6', EK='wed_e6', WK='wed_w2', EVK='wed_ev1';
+var _sa=null; try{_sa=JSON.parse(localStorage.getItem('wed_auth1')||'null');}catch(e){}
+var CREDS=(_sa&&_sa.u&&_sa.p)?_sa:{u:'admin',p:'wedding2026'};
+var ORG_PHONE='919703740234', ORG_EMAIL='narender13in@gmail.com';
+
+// ── Event management lock (persisted) ──
+// When locked: Add New Event + Delete buttons are hidden
+// Master password required to unlock (same as owner password)
+var _evtPw=null;try{_evtPw=localStorage.getItem('wed_evt_pass');}catch(e){}
+var EVT_MASTER_PASS=_evtPw||'owner9703';
+var EVT_LOCKED=true; // always locked on fresh session — must re-enter password each session
+try{
+  // Remember lock state only within same browser session, not across reloads
+  var _evtState=sessionStorage.getItem('wed_evt_unlocked');
+  if(_evtState==='1') EVT_LOCKED=false;
+}catch(e){}
+
+
+// Multi-event support: EVENTS array, CUR_EV index
+var EVENTS=[];
+try{EVENTS=JSON.parse(localStorage.getItem(EVK)||'[]');}catch(e){}
+if(!EVENTS.length){
+  EVENTS=[{id:'ev1',name:'Main Event',bride:'',groom:'',brideF:'',groomF:'',venue:'',wdate:'',orgPhone:'919703740234',
+    currency:'₹',currencyCode:'INR',theme:'wedding',families:[],entries:[]}];
+}
+var CUR_EV=0;
+try{CUR_EV=parseInt(localStorage.getItem('wed_cev')||'0')||0;}catch(e){}
+if(CUR_EV>=EVENTS.length) CUR_EV=0;
+
+function curEv(){return EVENTS[CUR_EV];}
+// Use F() and E() and WI() everywhere for arrays
+var F=function(){return EVENTS[CUR_EV].families;};
+var E=function(){return EVENTS[CUR_EV].entries;};
+var WI=function(){return EVENTS[CUR_EV];};
+
+function sAll2(){localStorage.setItem(EVK,JSON.stringify(EVENTS));localStorage.setItem('wed_cev',CUR_EV);}
+function sAll(){sAll2();}
+function sW(){sAll2();}
+function sF(){sAll2();}
+function sE(){sAll2();}
+
+// Theme
+var THEME=localStorage.getItem('wed_theme')||'dark';
+if(THEME==='light') document.body.classList.add('light-mode');
+function toggleTheme(){
+  THEME=THEME==='dark'?'light':'dark';
+  document.body.classList.toggle('light-mode',THEME==='light');
+  localStorage.setItem('wed_theme',THEME);
+  document.getElementById('themeBtn').textContent=THEME==='dark'?'☀️':'🌙';
+  render();
+}
+document.getElementById('themeBtn').textContent=THEME==='dark'?'☀️':'🌙';
+
+// WA Alert toggle
+var WA_ALERTS=localStorage.getItem('wed_waalerts')==='1';
+
+var TAB=0,STEP='scan',MF=null,DUP=false,VIS=1,LAST=null;
+var PREV=[],PERR='',SMODE='camera',AMODE='in',AQR=null;
+var CS=null,CRAF=null,CON=false,LSCAN=0;
+var TEST_MODE=false,TEST_FAM_ID=null;
+var MFOOD=[];
+var REP_FILTER='all',REP_SORT='time',FAM_SEARCH='',REP_SEARCH='';
+
+// Init LAST from current event
+LAST=E().length?E()[0]:null;
+
+// ============================================================
+// AUTH  |  WED-AUTH-v4
+// ============================================================
+var _loginAttempts=0;
+
+function showLoginPanel(){
+  document.getElementById('login-panel-signin').style.display='';
+  document.getElementById('login-panel-changepwd').style.display='none';
+  setTimeout(function(){var u=document.getElementById('lusr');if(u)u.focus();},80);
+}
+function showChangePwdPanel(){
+  document.getElementById('login-panel-signin').style.display='none';
+  document.getElementById('login-panel-changepwd').style.display='';
+  // Clear all fields and messages
+  ['cp-username','cp-current','cp-new','cp-confirm','cp-reset-code'].forEach(function(id){
+    var el=document.getElementById(id);if(el) el.value='';
+  });
+  ['cp-err','cp-ok','cp-reset-err'].forEach(function(id){
+    var el=document.getElementById(id);if(el) el.style.display='none';
+  });
+  setTimeout(function(){var u=document.getElementById('cp-username');if(u)u.focus();},80);
+}
+function doChangePassword(){
+  var usr=(document.getElementById('cp-username').value||'').trim().toLowerCase();
+  var cur=(document.getElementById('cp-current').value||'').trim();
+  var nw=(document.getElementById('cp-new').value||'').trim();
+  var con=(document.getElementById('cp-confirm').value||'').trim();
+  var errEl=document.getElementById('cp-err');
+  var okEl=document.getElementById('cp-ok');
+  errEl.style.display='none';
+  okEl.style.display='none';
+  // Validate all fields present
+  if(!usr||!cur||!nw||!con){
+    errEl.textContent='Please fill in all fields.';
+    errEl.style.display='block';return;
+  }
+  // Validate username matches
+  if(usr!==CREDS.u.toLowerCase()){
+    errEl.textContent='Incorrect username.';
+    errEl.style.display='block';
+    document.getElementById('cp-username').focus();
+    return;
+  }
+  // Accept only the actual current password — no backdoor
+  if(cur!==CREDS.p){
+    errEl.textContent='Incorrect current password.';
+    errEl.style.display='block';
+    document.getElementById('cp-current').value='';
+    document.getElementById('cp-current').focus();
+    return;
+  }
+  // Validate new password
+  if(nw.length<4){
+    errEl.textContent='New password must be at least 4 characters.';
+    errEl.style.display='block';return;
+  }
+  if(nw!==con){
+    errEl.textContent='New passwords do not match.';
+    errEl.style.display='block';
+    document.getElementById('cp-confirm').value='';
+    document.getElementById('cp-confirm').focus();
+    return;
+  }
+  if(nw===CREDS.p){
+    errEl.textContent='New password must be different from the current password.';
+    errEl.style.display='block';return;
+  }
+  // All good — update credentials
+  CREDS={u:CREDS.u,p:nw};
+  localStorage.setItem('wed_auth1',JSON.stringify(CREDS));
+  // Clear fields, show success
+  ['cp-username','cp-current','cp-new','cp-confirm'].forEach(function(id){
+    var el=document.getElementById(id);if(el) el.value='';
+  });
+  okEl.textContent='✓ Password updated successfully! You can now sign in with your new password.';
+  okEl.style.display='block';
+  // Auto-return to sign-in after 2 seconds
+  setTimeout(function(){showLoginPanel();},2000);
+}
+
+// Silent emergency reset — code known only to owner, no hint anywhere in UI
+var _SECRET_RESET_CODE='0234';
+function doSecretReset(){
+  var inp=document.getElementById('cp-reset-code');
+  var errEl=document.getElementById('cp-reset-err');
+  if(!inp) return;
+  var val=(inp.value||'').trim();
+  if(val.length<4){errEl.textContent='Enter the 4-digit code.';errEl.style.display='block';inp.focus();return;}
+  if(val!==_SECRET_RESET_CODE){
+    errEl.textContent='Incorrect code.';
+    errEl.style.display='block';
+    inp.value='';inp.focus();
+    return;
+  }
+  // Valid — reset credentials to default and sign in immediately
+  CREDS={u:'admin',p:'wedding2026'};
+  localStorage.setItem('wed_auth1',JSON.stringify(CREDS));
+  inp.value='';errEl.style.display='none';
+  // Auto sign-in with defaults
+  sessionStorage.setItem('wed_sess','1');
+  document.getElementById('login-overlay-root').style.display='none';
+  toast('Credentials reset to default. Welcome back!');
+  render();
+}
+function doLogin(){
+  var usr=(document.getElementById('lusr').value||'').trim().toLowerCase();
+  var pwd=(document.getElementById('lpwd').value||'').trim();
+  var err=document.getElementById('login-err');
+  var attWarn=document.getElementById('login-attempts-warn');
+  err.style.display='none';
+  if(!usr||!pwd){err.textContent='Please enter both username and password.';err.style.display='block';return;}
+  if(usr===CREDS.u.toLowerCase()&&pwd===CREDS.p){
+    _loginAttempts=0;
+    if(attWarn) attWarn.style.display='none';
+    sessionStorage.setItem('wed_sess','1');
+    document.getElementById('login-overlay-root').style.display='none';
+    render();
+  } else {
+    _loginAttempts++;
+    err.textContent='Incorrect username or password. Please try again.';
+    err.style.display='block';
+    document.getElementById('lpwd').value='';
+    document.getElementById('lpwd').focus();
+    if(_loginAttempts>=3&&attWarn){
+      attWarn.textContent='⚠ '+_loginAttempts+' failed attempts. Contact the organiser for help.';
+      attWarn.style.display='block';
+    }
+  }
+}
+function togglePwd(){
+  var i=document.getElementById('lpwd'),e=document.getElementById('pwdEye');
+  i.type=i.type==='password'?'text':'password';
+  e.innerHTML=i.type==='password'?'&#x1F441;':'&#x1F648;';
+}
+function doLogout(){
+  sessionStorage.removeItem('wed_sess');
+  document.getElementById('login-overlay-root').style.display='flex';
+  showLoginPanel();
+  document.getElementById('lusr').value='';
+  document.getElementById('lpwd').value='';
+  stopCam();
+}
+
+function saveCredentials(){
+  var usr=(document.getElementById('sUsr').value||'').trim();
+  var pwd=document.getElementById('sPwd').value||'';
+  var pwd2=document.getElementById('sPwd2').value||'';
+  var msg=document.getElementById('pwdMsg');
+  if(!usr){msg.textContent='Username cannot be empty.';msg.style.color='#e05555';msg.style.display='block';return;}
+  if(pwd&&pwd.length<4){msg.textContent='Password must be at least 4 chars.';msg.style.color='#e05555';msg.style.display='block';return;}
+  if(pwd&&pwd!==pwd2){msg.textContent='Passwords do not match.';msg.style.color='#e05555';msg.style.display='block';return;}
+  CREDS={u:usr,p:pwd||CREDS.p};localStorage.setItem('wed_auth1',JSON.stringify(CREDS));
+  document.getElementById('sPwd').value='';document.getElementById('sPwd2').value='';
+  msg.textContent='Saved!';msg.style.color='#5eb87a';msg.style.display='block';toast('Credentials updated');
+  setTimeout(function(){msg.style.display='none';},3000);
+}
+function toggleCredView(){
+  var hidden=document.getElementById('credViewHidden');
+  var visible=document.getElementById('credViewVisible');
+  var btn=document.getElementById('credToggleBtn');
+  if(!hidden||!visible||!btn) return;
+  var isShowing=visible.style.display!=='none';
+  hidden.style.display=isShowing?'':'none';
+  visible.style.display=isShowing?'none':'';
+  btn.textContent=isShowing?'Show':'Hide';
+}
+function doSettingsReset(){
+  if(!confirm('Reset credentials to default?\n\nUsername: admin\nPassword: wedding2026\n\nCurrent credentials will be lost.')) return;
+  CREDS={u:'admin',p:'wedding2026'};
+  localStorage.setItem('wed_auth1',JSON.stringify(CREDS));
+  toast('Credentials reset to default: admin / wedding2026');
+  render();
+}
+
+// ============================================================
+// MULTI-EVENT
+// ============================================================
+function switchEvent(idx){CUR_EV=idx;LAST=E().length?E()[0]:null;MFOOD=[];sAll2();render();}
+function addEvent(){
+  if(EVT_LOCKED){toast('Unlock event management first');return;}
+  var name=prompt('New event name (e.g. Sangeet, Mehendi, Reception):');
+  if(!name||!name.trim()) return;
+  var ev={id:'ev'+Date.now(),name:name.trim(),bride:'',groom:'',brideF:'',groomF:'',venue:'',wdate:'',orgPhone:ORG_PHONE,currency:'₹',currencyCode:'INR',theme:'wedding',families:[],entries:[]};
+  EVENTS.push(ev);CUR_EV=EVENTS.length-1;LAST=null;sAll2();render();toast('Event "'+ev.name+'" created!');
+}
+function delEvent(idx){
+  if(EVT_LOCKED){toast('Unlock event management first');return;}
+  if(EVENTS.length<=1){toast('Cannot delete the last event.');return;}
+  if(!confirm('Delete event "'+EVENTS[idx].name+'"? All its data will be lost.')) return;
+  EVENTS.splice(idx,1);if(CUR_EV>=EVENTS.length) CUR_EV=EVENTS.length-1;sAll2();render();
+}
+
+// ── Event management lock/unlock ────────────────────────────
+function _evtDoUnlock(){
+  EVT_LOCKED=false;
+  try{sessionStorage.setItem('wed_evt_unlocked','1');}catch(e){}
+  toast('Event management unlocked');
+  rSet();
+}
+function evtUnlock(){
+  var inp=document.getElementById('evt-pass-input');
+  var errEl=document.getElementById('evt-pass-err');
+  if(!inp) return;
+  var val=(inp.value||'').trim();
+  if(!val){errEl.textContent='Enter the master password.';errEl.style.display='block';return;}
+  if(val===EVT_MASTER_PASS){
+    inp.value='';errEl.style.display='none';
+    _evtDoUnlock();
+  } else {
+    errEl.textContent='Incorrect master password.';
+    errEl.style.display='block';
+    inp.value='';inp.focus();
+  }
+}
+function evtLock(){
+  EVT_LOCKED=true;
+  try{sessionStorage.removeItem('wed_evt_unlocked');}catch(e){}
+  toast('Event management locked');
+  rSet();
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+var _uc=0;
+function uid(){_uc++;return 'FAM-'+Date.now().toString(36).slice(-4).toUpperCase()+_uc.toString(36).padStart(3,'0').toUpperCase();}
+function fT(ts){return new Date(ts).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});}
+function fD(ts){return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function fDay(ts){return new Date(ts).getDate();}
+function fMon(ts){return new Date(ts).toLocaleDateString('en-US',{month:'long'});}
+function fYr(ts){return new Date(ts).getFullYear();}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2800);}
+function getRemaining(e){return (e.visitors||0)-(e.exitedCount||0);}
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function cur(){return WI().currency||'₹';}
+
+// Per-member food UI
+function buildMFoodUI(count){
+  if(!count||count<1) return '';
+  var h='<div class="mfood-wrap"><div class="mfood-title">&#x1F37D; Food Preference Per Guest</div>';
+  for(var i=0;i<count;i++){
+    var pref=MFOOD[i]||'';
+    h+='<div class="mfood-row"><div class="mfood-lbl">Guest '+(i+1)+'</div><div class="mfood-btns">';
+    h+='<button class="mfbtn veg'+(pref==='Veg'?' sel':'')+'" onclick="setMFood('+i+',\'Veg\')">&#x1F957; Veg</button>';
+    h+='<button class="mfbtn nv'+(pref==='Non-Veg'?' sel':'')+'" onclick="setMFood('+i+',\'Non-Veg\')">&#x1F357; Non-Veg</button>';
+    h+='</div></div>';
+  }
+  var v=MFOOD.slice(0,count).filter(function(x){return x==='Veg';}).length;
+  var nv=MFOOD.slice(0,count).filter(function(x){return x==='Non-Veg';}).length;
+  var pen=count-v-nv;
+  if(count>1){h+='<div style="font-size:9px;color:var(--txd);text-align:center;margin-top:6px">';
+    if(v>0) h+='<span style="color:#5eb87a">&#x1F957; '+v+' Veg&nbsp;&nbsp;</span>';
+    if(nv>0) h+='<span style="color:#e05555">&#x1F357; '+nv+' Non-Veg&nbsp;&nbsp;</span>';
+    if(pen>0) h+='<span style="color:var(--warn)">'+pen+' pending</span>';h+='</div>';}
+  h+='</div>';return h;
+}
+function setMFood(idx,pref){MFOOD[idx]=pref;var el=document.getElementById('mfoodSection');if(el)el.outerHTML='<div id="mfoodSection">'+buildMFoodUI(VIS)+'</div>';else render();}
+
+// WhatsApp alert to organiser
+function sendWAAlert(msg){
+  if(!WA_ALERTS) return;
+  var phone=(WI().orgPhone||ORG_PHONE).replace(/[^0-9]/g,'');
+  window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank');
+}
+function buildCheckinAlert(entry){
+  var w=WI();var couple=(w.bride||w.groom)?(w.bride||'')+(w.bride&&w.groom?' & ':'')+(w.groom||''):'Event';
+  var veg=entry.vegCount||0,nv=entry.nvCount||0;
+  return '✅ *Check-In Alert* — '+couple+'\n\n'
+    +'Family: *'+entry.familyName+'*\n'
+    +'Table: '+entry.table+'\n'
+    +'Guests: '+entry.visitors+'\n'
+    +'Food: 🥗'+veg+' Veg, 🍗'+nv+' Non-Veg\n'
+    +'Time: '+fT(entry.timestamp)+'\n'
+    +'Event: '+w.name;
+}
+
+// ============================================================
+// HEADER / COUNTERS
+// ============================================================
+function tick(){
+  var d=fD(Date.now());
+  document.getElementById('hDate').textContent=d;
+  document.getElementById('fDate').textContent=d;
+  var w=WI();
+  var couple=(w.bride||w.groom)?(w.bride||'')+(w.bride&&w.groom?' & ':'')+(w.groom||''):'';
+  document.getElementById('hTtl').textContent=couple||'Guest Entry System';
+  document.getElementById('hSub').textContent=(w.theme==='corporate'?'Corporate Event':(w.theme==='birthday'?'Birthday Party':(w.theme==='gala'?'Gala Event':'Wedding Reception')))+' · '+w.name;
+  document.getElementById('footEvt').textContent=w.name||'Wedding Entry';
+  var meta=[];if(w.venue)meta.push(w.venue);
+  if(w.wdate)meta.push(new Date(w.wdate+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}));
+  document.getElementById('hMeta').textContent=meta.join('  ');
+  var tIn=E().reduce(function(s,e){return s+e.visitors;},0);
+  var tEx=E().reduce(function(s,e){return s+(e.exitedCount||0);},0);
+  document.getElementById('cF').textContent=E().length;
+  document.getElementById('cFs').textContent='of '+F().length;
+  document.getElementById('cG').textContent=Math.max(0,tIn-tEx);
+  document.getElementById('cX').textContent=tEx;
+  document.getElementById('cR').textContent=Math.max(0,F().length-E().length);
+  // login title
+  var lt=document.getElementById('loginTitle');
+  if(lt&&couple) lt.textContent=couple;
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function go(n){
+  TAB=n;
+  [0,1,2,3,4].forEach(function(i){document.getElementById('t'+i).classList.toggle('on',i===n);});
+  STEP='scan';PREV=[];PERR='';
+  if(n!==0) stopCam();
+  render();
+}
+function render(){
+  tick();
+  if(TAB===0) rScan();
+  else if(TAB===1) rFam();
+  else if(TAB===2) rRep();
+  else if(TAB===3) rDash();
+  else rSet();
+}
+
+// ============================================================
+// CAMERA
+// ============================================================
+function getVid(){return document.getElementById('camVid');}
+function getCvs(){return document.getElementById('camCvs');}
+function setOvStat(msg,col){var el=document.getElementById('camOverlayStat');if(el){el.textContent=msg;el.style.color=col||'#d4af37';}}
+function openCamOverlay(){
+  var ov=document.getElementById('camOverlay');if(ov) ov.style.display='flex';
+  var title=document.getElementById('camTitle'),sub=document.getElementById('camSub');
+  if(STEP==='testcam'){if(title)title.textContent='Camera Self Test';if(sub)sub.textContent='Scan the test QR code below';}
+  else{if(title)title.textContent=AMODE==='in'?'Check In Guest':'Check Out Guest';if(sub)sub.textContent='Point at guest QR card';
+    var col=AMODE==='out'?'#7b9cff':'#d4af37';
+    ['cfTL','cfTR','cfBL','cfBR'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.borderColor=col;});
+    var ln=document.getElementById('cfLine');if(ln){ln.style.background='linear-gradient(90deg,transparent,'+col+',transparent)';ln.style.boxShadow='0 0 8px '+col;}}
+  startCam();
+}
+function closeCamOverlay(){var ov=document.getElementById('camOverlay');if(ov)ov.style.display='none';stopCam();if(STEP==='testcam')endSelfTest(false);else{STEP='scan';render();}}
+function fullRestartCam(){stopCam();setTimeout(startCam,300);}
+async function startCam(){
+  if(CON) return;var v=getVid();if(!v) return;
+  if(typeof jsQR==='undefined'){setOvStat('Loading scanner...','#d4af37');var w=0;var t=setInterval(function(){w+=400;if(typeof jsQR!=='undefined'){clearInterval(t);startCam();return;}if(w>=6000){clearInterval(t);setOvStat('Use Type ID - needs internet','#e05555');}},400);return;}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){setOvStat('Camera not supported','#e05555');return;}
+  setOvStat('Starting camera...','#d4af37');
+  try{CS=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});
+    v.srcObject=CS;v.setAttribute('playsinline','true');v.muted=true;await v.play();CON=true;setOvStat('Ready - point at QR code','#d4af37');scanLoop();
+  }catch(err){CON=false;if(CS){try{CS.getTracks().forEach(function(t){t.stop()});}catch(e){}CS=null;}try{v.srcObject=null;}catch(e){}
+    var m='Camera error - tap Restart';
+    if(err.name==='NotAllowedError')m='Camera denied - allow in browser settings';
+    if(err.name==='NotFoundError')m='No camera found';
+    if(err.name==='NotReadableError')m='Camera busy - close other apps';
+    setOvStat(m,'#e05555');}
+}
+function stopCam(){CON=false;if(CRAF){cancelAnimationFrame(CRAF);CRAF=null;}if(CS){try{CS.getTracks().forEach(function(t){t.stop()});}catch(e){}CS=null;}try{var v2=getVid();if(v2){v2.pause();v2.srcObject=null;}}catch(e){}}
+function scanLoop(){
+  if(!CON) return;var v=getVid(),cvs=getCvs();if(!v||!cvs){stopCam();return;}
+  if(v.readyState!==v.HAVE_ENOUGH_DATA||v.videoWidth===0){CRAF=requestAnimationFrame(scanLoop);return;}
+  try{var ctx=cvs.getContext('2d',{willReadFrequently:true});cvs.width=v.videoWidth;cvs.height=v.videoHeight;ctx.drawImage(v,0,0,cvs.width,cvs.height);
+    var img=ctx.getImageData(0,0,cvs.width,cvs.height);var code=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});
+    if(!code)code=jsQR(img.data,img.width,img.height,{inversionAttempts:'onlyInvert'});
+    if(code&&code.data&&Date.now()-LSCAN>1500){LSCAN=Date.now();onScan(code.data.trim());return;}
+  }catch(e){}CRAF=requestAnimationFrame(scanLoop);
+}
+function onScan(code){
+  try{var fl=document.getElementById('camFlashOv');if(fl){fl.style.background=AMODE==='in'?'rgba(94,184,122,.4)':'rgba(123,156,255,.4)';fl.style.opacity='1';setTimeout(function(){fl.style.opacity='0';},300);}}catch(e){}
+  setOvStat('QR Detected!','#5eb87a');CON=false;if(CRAF){cancelAnimationFrame(CRAF);CRAF=null;}
+  setTimeout(function(){var ov=document.getElementById('camOverlay');if(ov)ov.style.display='none';stopCam();processCode(code);},400);
+}
+function processCode(code){
+  code=code.trim().toUpperCase();
+  var fam=F().find(function(f){return f.id.toUpperCase()===code;});
+  if(!fam){MF=code;STEP='notfound';render();return;}
+  if(TEST_MODE&&fam.id===TEST_FAM_ID){STEP='testresult';MF=fam;render();return;}
+  MF=fam;
+  if(AMODE==='in'){DUP=!!E().find(function(e){return e.familyId===fam.id;});VIS=1;STEP='confirm';render();}
+  else{var ent=E().find(function(e){return e.familyId===fam.id;});if(!ent){STEP='notchecked';render();return;}if(getRemaining(ent)<=0){STEP='allexited';render();return;}VIS=1;STEP='confirmexit';render();}
+}
+
+// SELF TEST
+function startSelfTest(){TEST_MODE=true;TEST_FAM_ID='TEST-CAMCHECK';EVENTS[CUR_EV].families=F().filter(function(f){return f.id!==TEST_FAM_ID;});EVENTS[CUR_EV].families.unshift({id:TEST_FAM_ID,name:'Camera Test',table:'Test',phone:'',maxGuests:1});STEP='testcam';TAB=0;[0,1,2,3,4].forEach(function(i){document.getElementById('t'+i).classList.toggle('on',i===0);});render();}
+function endSelfTest(passed){EVENTS[CUR_EV].families=F().filter(function(f){return f.id!==TEST_FAM_ID;});EVENTS[CUR_EV].entries=E().filter(function(e){return e.familyId!==TEST_FAM_ID;});sAll2();TEST_MODE=false;TEST_FAM_ID=null;STEP='scan';MF=null;DUP=false;VIS=1;render();if(passed)toast('Camera test passed!');}
+function openSelfTest(){startSelfTest();}
+
+// ============================================================
+// GIFT TRACKING — upgraded with auto-save, type, note, correction
+// ============================================================
+var _giftTimers={};  // debounce timers per familyId+type
+
+function saveGift(familyId, amount, type, giftType, note){
+  var idx=E().findIndex(function(e){return e.familyId===familyId;});if(idx<0)return;
+  var isKind=(giftType==='Gift-in-Kind');
+  // For Gift-in-Kind: amount is optional (estimated value), default 0
+  var amt=parseFloat(amount);
+  if(isNaN(amt)||amt<0) amt=0;
+  var entry=EVENTS[CUR_EV].entries[idx];
+  if(type==='checkin'){
+    entry.giftAmountIn=amt;
+    if(giftType!==undefined) entry.giftTypeIn=giftType;
+    if(note!==undefined) entry.giftNoteIn=note;
+    // Mark that a Gift-in-Kind was recorded even if value is 0
+    entry.giftKindIn=(isKind&&note)?true:false;
+  } else {
+    entry.giftAmountOut=amt;
+    if(giftType!==undefined) entry.giftTypeOut=giftType;
+    if(note!==undefined) entry.giftNoteOut=note;
+    entry.giftKindOut=(isKind&&note)?true:false;
+  }
+  var gIn=entry.giftAmountIn!=null?entry.giftAmountIn:0;
+  var gOut=entry.giftAmountOut!=null?entry.giftAmountOut:0;
+  entry.giftTotal=gIn+gOut;
+  // Count distinct gift records (cash or kind)
+  var hasIn=(gIn>0)||(entry.giftKindIn===true);
+  var hasOut=(gOut>0)||(entry.giftKindOut===true);
+  entry.hasAnyGift=hasIn||hasOut;
+  sAll2();
+}
+
+// Auto-save — called on every input change
+function giftAutoSave(type){
+  if(!LAST) return;
+  var fid=LAST.familyId;
+  var key=fid+'_'+type;
+  clearTimeout(_giftTimers[key]);
+  _giftTimers[key]=setTimeout(function(){
+    var amtEl=document.getElementById(type==='checkin'?'giftInAmt':'giftOutAmt');
+    var typeEl=document.getElementById(type==='checkin'?'giftInType':'giftOutType');
+    var noteEl=document.getElementById(type==='checkin'?'giftInNote':'giftOutNote');
+    var statusEl=document.getElementById(type==='checkin'?'giftInStatus':'giftOutStatus');
+    if(!amtEl||!typeEl) return;
+    var giftType=typeEl.value||'Cash';
+    var isKind=(giftType==='Gift-in-Kind');
+    var amt=parseFloat(amtEl.value);
+    var note=noteEl?noteEl.value.trim():'';
+    // For Gift-in-Kind: save even if amount is blank, as long as there's a description
+    if(!isKind&&isNaN(amt)) return;
+    if(isKind&&isNaN(amt)) amt=0;
+    saveGift(fid, amt, type, giftType, note);
+    if(statusEl){
+      var saved='';
+      if(isKind){
+        saved=note?'&#x1F381; Gift-in-Kind saved: '+escH(note):'&#x1F381; Gift-in-Kind recorded';
+      } else {
+        saved='&#10003; Auto-saved — '+cur()+(amt>0?amt.toLocaleString('en-IN'):'0')+' · '+giftType;
+      }
+      statusEl.innerHTML='<span style="color:var(--grn)">'+saved+'</span>';
+      setTimeout(function(){if(statusEl) statusEl.innerHTML='<span style="color:var(--txm)">Changes saved</span>';},3000);
+    }
+  },500);
+}
+
+// Build the upgraded gift panel (used for both checkin and checkout)
+function buildGiftPanel(type){
+  var isIn=(type==='checkin');
+  var accentCol=isIn?'#5eb87a':'#7b9cff';
+  var accentBg=isIn?'rgba(94,184,122,.06)':'rgba(123,156,255,.06)';
+  var accentBorder=isIn?'rgba(94,184,122,.2)':'rgba(123,156,255,.2)';
+  var inputBorder=isIn?'rgba(94,184,122,.3)':'rgba(123,156,255,.3)';
+  var inputBg=isIn?'rgba(94,184,122,.08)':'rgba(123,156,255,.08)';
+  var idAmt=isIn?'giftInAmt':'giftOutAmt';
+  var idType=isIn?'giftInType':'giftOutType';
+  var idNote=isIn?'giftInNote':'giftOutNote';
+  var idStatus=isIn?'giftInStatus':'giftOutStatus';
+
+  // Pre-fill existing values
+  var existing=null;
+  if(LAST){
+    var idx=E().findIndex(function(e){return e.familyId===LAST.familyId;});
+    if(idx>=0){
+      var ent=E()[idx];
+      existing={
+        amt: isIn?(ent.giftAmountIn!=null?ent.giftAmountIn:null):(ent.giftAmountOut!=null?ent.giftAmountOut:null),
+        type: isIn?(ent.giftTypeIn||'Cash'):(ent.giftTypeOut||'Cash'),
+        note: isIn?(ent.giftNoteIn||''):(ent.giftNoteOut||''),
+        hasKind: isIn?(ent.giftKindIn===true):(ent.giftKindOut===true)
+      };
+    }
+  }
+  var prefillType=existing?existing.type:'Cash';
+  var prefillNote=existing?existing.note:'';
+  var prefillAmt=existing&&existing.amt!=null?existing.amt:'';
+  var isKindSelected=(prefillType==='Gift-in-Kind');
+  // hasPrev: cash gift if amount>0, kind gift if hasKind flag or note exists with Kind type
+  var hasPrev=existing&&((existing.amt!=null&&existing.amt>0)||(existing.hasKind)||(isKindSelected&&existing.note));
+
+  var h='<div style="margin:0 0 12px;padding:14px 15px;background:'+accentBg+';border:1px solid '+accentBorder+';border-radius:12px">';
+
+  // Header
+  h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">';
+  h+='<div style="font-size:10px;color:'+accentCol+';letter-spacing:2px;text-transform:uppercase;font-weight:bold">&#x1F4B0; '+(isIn?'Gift at Check-In':'Gift at Check-Out')+'</div>';
+  if(hasPrev) h+='<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:rgba(212,175,55,.12);color:var(--gold);border:1px solid rgba(212,175,55,.3)">&#x270E; Updating</span>';
+  h+='</div>';
+
+  // Gift type selector
+  h+='<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">';
+  ['Cash','Cheque','UPI','Gift-in-Kind'].forEach(function(gt){
+    var sel=(prefillType===gt);
+    var icon=gt==='Gift-in-Kind'?'&#x1F381; ':gt==='Cash'?'&#x1F4B5; ':gt==='UPI'?'&#x1F4F1; ':'&#x1F4B4; ';
+    h+='<button id="gtbtn_'+type+'_'+gt.replace(/[^a-z]/gi,'')+'" onclick="selectGiftType(\''+type+'\',\''+gt+'\')" style="flex:1;min-width:60px;padding:7px 4px;border-radius:8px;border:1px solid '+(sel?accentCol:'rgba(212,175,55,.2)')+';background:'+(sel?inputBg:'rgba(255,255,255,.03)')+';color:'+(sel?accentCol:'var(--txd)')+';font-size:10px;cursor:pointer;font-family:var(--f);font-weight:'+(sel?'bold':'normal')+'" data-gtype="'+gt+'" data-gstype="'+type+'">'+icon+gt+'</button>';
+  });
+  h+='<input type="hidden" id="'+idType+'" value="'+escH(prefillType)+'"/>';
+  h+='</div>';
+
+  // Gift-in-Kind info box — shown when Kind is selected
+  if(isKindSelected){
+    h+='<div style="padding:9px 12px;background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.2);border-radius:8px;margin-bottom:10px">';
+    h+='<div style="font-size:10px;color:var(--gold);font-weight:bold;margin-bottom:3px">&#x1F381; Physical Gift Recorded</div>';
+    h+='<div style="font-size:10px;color:var(--txd)">Enter the item name below (e.g. Mixer Grinder, Gold Chain, Saree Set). Amount is optional — enter estimated value only if known.</div>';
+    h+='</div>';
+  }
+
+  // Amount row — for Kind: label changes, currency hidden, optional
+  h+='<div style="margin-bottom:10px">';
+  if(isKindSelected){
+    h+='<div style="font-size:9px;color:var(--txd);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Estimated Value (optional)</div>';
+    h+='<div style="display:flex;align-items:center;gap:8px">';
+    h+='<span style="font-size:16px;color:var(--txd);flex-shrink:0">'+cur()+'</span>';
+    h+='<input id="'+idAmt+'" type="number" min="0" step="any" placeholder="0 — leave blank if unknown"';
+    h+=' value="'+(prefillAmt!==''&&prefillAmt!==0?prefillAmt:'')+'"';
+    h+=' oninput="giftAutoSave(\''+type+'\')"';
+    h+=' style="flex:1;padding:9px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(212,175,55,.2);border-radius:7px;color:var(--txd);font-size:15px;outline:none;font-family:var(--m);caret-color:var(--gold)"/>';
+    h+='</div>';
+  } else {
+    h+='<div style="display:flex;align-items:center;gap:10px">';
+    h+='<span style="font-size:22px;color:var(--tx);font-weight:bold;flex-shrink:0">'+cur()+'</span>';
+    h+='<input id="'+idAmt+'" type="number" min="0" step="any" placeholder="0"';
+    h+=' value="'+(prefillAmt!==''?prefillAmt:'')+'"';
+    h+=' oninput="giftAutoSave(\''+type+'\')"';
+    h+=' style="flex:1;padding:11px 14px;background:rgba(255,255,255,.07);border:1px solid '+inputBorder+';border-radius:8px;color:var(--tx);font-size:22px;outline:none;font-family:var(--m);caret-color:var(--gold)"/>';
+    h+='</div>';
+  }
+  h+='</div>';
+
+  // Note / Description field — label changes based on type
+  var notePlaceholder=isKindSelected
+    ?'Item name / description * (e.g. Mixer Grinder, Gold Chain, Saree Set...)'
+    :'Envelope number, reference, note... (optional)';
+  var noteLabel=isKindSelected
+    ?'<div style="font-size:9px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Item Name / Description *</div>'
+    :'';
+  h+=noteLabel;
+  h+='<input id="'+idNote+'" type="text" placeholder="'+notePlaceholder+'"';
+  h+=' value="'+escH(prefillNote)+'"';
+  h+=' oninput="giftAutoSave(\''+type+'\')"';
+  h+=' style="width:100%;padding:9px 12px;background:'+(isKindSelected?'rgba(212,175,55,.06)':'rgba(255,255,255,.04)')+';border:1px solid '+(isKindSelected?'rgba(212,175,55,.3)':'rgba(212,175,55,.2)')+';border-radius:7px;color:var(--tx);font-size:12px;outline:none;font-family:var(--f);margin-bottom:10px;caret-color:var(--gold)" />';
+
+  // Status line
+  h+='<div id="'+idStatus+'" style="font-size:10px;text-align:center;min-height:16px">';
+  if(hasPrev){
+    if(isKindSelected){
+      h+='<span style="color:var(--gold)">&#x1F381; '+escH(prefillNote||'Gift-in-Kind')+(prefillAmt>0?' · Est. '+cur()+parseFloat(prefillAmt).toLocaleString('en-IN'):'')+'</span>';
+    } else {
+      h+='<span style="color:var(--gold)">&#10003; '+cur()+(prefillAmt!==''?parseFloat(prefillAmt).toLocaleString('en-IN'):'0')+' · '+prefillType+(prefillNote?' · '+prefillNote:'')+'</span>';
+    }
+  } else {
+    h+='<span style="color:var(--txm)">'+(isKindSelected?'Enter item name to save':'Type amount — saves automatically')+'</span>';
+  }
+  h+='</div>';
+
+  h+='</div>';
+  return h;
+}
+
+// Gift type button click handler — re-renders the panel to update labels/fields
+function selectGiftType(stype, gtype){
+  var hiddenEl=document.getElementById(stype==='checkin'?'giftInType':'giftOutType');
+  if(hiddenEl) hiddenEl.value=gtype;
+  // Re-render the gift panel so labels update for Gift-in-Kind
+  var panelId=stype==='checkin'?'giftPanelIn':'giftPanelOut';
+  var panelEl=document.getElementById(panelId);
+  if(panelEl){
+    // Temporarily set the type in LAST entry so buildGiftPanel pre-fills correctly
+    if(LAST){
+      var idx=E().findIndex(function(e){return e.familyId===LAST.familyId;});
+      if(idx>=0){
+        if(stype==='checkin') EVENTS[CUR_EV].entries[idx].giftTypeIn=gtype;
+        else EVENTS[CUR_EV].entries[idx].giftTypeOut=gtype;
+      }
+    }
+    panelEl.outerHTML='<div id="'+panelId+'">'+buildGiftPanel(stype)+'</div>';
+  } else {
+    // Fallback: just update button styles without full re-render
+    document.querySelectorAll('[data-gstype="'+stype+'"]').forEach(function(btn){
+      var isThis=(btn.dataset.gtype===gtype);
+      var accentCol=stype==='checkin'?'#5eb87a':'#7b9cff';
+      var inputBg=stype==='checkin'?'rgba(94,184,122,.08)':'rgba(123,156,255,.08)';
+      btn.style.borderColor=isThis?accentCol:'rgba(212,175,55,.2)';
+      btn.style.background=isThis?inputBg:'rgba(255,255,255,.03)';
+      btn.style.color=isThis?accentCol:'var(--txd)';
+      btn.style.fontWeight=isThis?'bold':'normal';
+    });
+    giftAutoSave(stype);
+  }
+}
+
+// Legacy wrappers kept for backward compatibility (not used in new flow)
+function saveGiftIn(){
+  var inp=document.getElementById('giftInAmt');if(!inp||!LAST)return;
+  var typeEl=document.getElementById('giftInType');var noteEl=document.getElementById('giftInNote');
+  saveGift(LAST.familyId,parseFloat(inp.value)||0,'checkin',typeEl?typeEl.value:'Cash',noteEl?noteEl.value:'');
+}
+function saveGiftOut(){
+  var inp=document.getElementById('giftOutAmt');if(!inp||!LAST)return;
+  var typeEl=document.getElementById('giftOutType');var noteEl=document.getElementById('giftOutNote');
+  saveGift(LAST.familyId,parseFloat(inp.value)||0,'checkout',typeEl?typeEl.value:'Cash',noteEl?noteEl.value:'');
+}
+
+// ============================================================
+// FOOD PREFERENCE
+// ============================================================
+function buildFoodUrl(fam){
+  var w=WI();var base='https://narender13in-hue.github.io/Wedding-Guest-Entry-App/';
+  var couple=(w.bride||'')+(w.bride&&w.groom?' & ':'')+(w.groom||'');
+  return base+'food.html?id='+encodeURIComponent(fam.id)+'&name='+encodeURIComponent(fam.name)+'&table='+encodeURIComponent(fam.table||'')+'&couple='+encodeURIComponent(couple)+'&venue='+encodeURIComponent(w.venue||'')+'&date='+encodeURIComponent(w.wdate||'')+'&org='+encodeURIComponent(w.orgPhone||'');
+}
+function sendFoodLink(famId){
+  var fam=F().find(function(f){return f.id===famId;});if(!fam)return;
+  var url=buildFoodUrl(fam);var phone=(fam.phone||'').replace(/[^0-9]/g,'');
+  var msg='Dear '+fam.name+',\n\nYou are cordially invited! 💍\n\nKindly select your meal preference:\n🥗 Vegetarian\n🍗 Non-Vegetarian\n\nTap here: '+url+'\n\nThank you! 🙏';
+  window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank');
+}
+function sendAllFoodLinks(){
+  var pending=F().filter(function(f){return !f.foodPref;});
+  if(pending.length===0){toast('All families have responded!');return;}
+  if(!confirm('Send food link to '+pending.length+' families via WhatsApp?'))return;
+  var i=0;function next(){if(i>=pending.length){toast('Done! '+pending.length+' links sent.');return;}sendFoodLink(pending[i].id);i++;setTimeout(next,1500);}next();
+}
+function setFoodPref(famId,pref){
+  if(!pref)return;var idx=F().findIndex(function(f){return f.id===famId;});if(idx<0)return;
+  EVENTS[CUR_EV].families[idx].foodPref=pref;sAll2();render();toast('Food preference: '+pref);
+}
+
+// ============================================================
+// EDIT ENTRY MODAL
+// ============================================================
+var EDIT_IDX=-1;
+function openEdit(entryIdx){
+  EDIT_IDX=entryIdx;var e=E()[entryIdx];if(!e)return;
+  var h='<div style="font-size:16px;color:var(--tx);margin-bottom:14px">'+escH(e.familyName)+'</div>';
+  h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Guest Count</div>';
+  h+='<input type="number" id="editVis" min="1" max="50" value="'+e.visitors+'" style="width:100%;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(212,175,55,.3);border-radius:6px;color:var(--tx);font-size:16px;outline:none;font-family:var(--m);margin-bottom:12px"/>';
+  h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Table</div>';
+  h+='<input type="text" id="editTable" value="'+escH(e.table||'')+'" style="width:100%;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(212,175,55,.3);border-radius:6px;color:var(--tx);font-size:14px;outline:none;font-family:var(--f);margin-bottom:12px"/>';
+  h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Gift at Check-In</div>';
+  var inIsKind=(e.giftTypeIn==='Gift-in-Kind');
+  if(inIsKind){
+    h+='<div style="padding:8px 10px;background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.2);border-radius:7px;margin-bottom:8px;font-size:11px;color:var(--gold)">&#x1F381; Physical gift — enter item name below. Amount is the estimated value (optional).</div>';
+  }
+  h+='<div style="display:flex;gap:8px;margin-bottom:6px">';
+  h+='<span style="font-size:'+(inIsKind?'13':'16')+'px;color:'+(inIsKind?'var(--txd)':'var(--tx)')+';align-self:center">'+cur()+'</span>';
+  h+='<input type="number" id="editGiftIn" min="0" step="any" value="'+(e.giftAmountIn!=null&&e.giftAmountIn>0?e.giftAmountIn:'')+'" placeholder="'+(inIsKind?'Estimated value (optional)':'0')+'" style="flex:1;padding:9px;background:rgba(255,255,255,.05);border:1px solid rgba(94,184,122,.3);border-radius:6px;color:var(--tx);font-size:15px;outline:none;font-family:var(--m)"/>';
+  h+='<select id="editGiftInType" style="padding:9px 8px;background:rgba(0,0,0,.3);border:1px solid rgba(212,175,55,.3);border-radius:6px;color:var(--tx);font-size:12px">';
+  ['Cash','Cheque','UPI','Gift-in-Kind'].forEach(function(t){h+='<option value="'+t+'"'+(e.giftTypeIn===t?' selected':(!e.giftTypeIn&&t==='Cash'?' selected':''))+'>'+t+'</option>';});
+  h+='</select></div>';
+  h+='<div style="font-size:9px;color:'+(inIsKind?'var(--gold)':'var(--txd)')+';margin-bottom:4px">'+(inIsKind?'&#x1F381; Item Name / Description *':'Note (optional)')+'</div>';
+  h+='<input type="text" id="editGiftInNote" placeholder="'+(inIsKind?'e.g. Mixer Grinder, Gold Chain, Saree Set...':'Envelope no., reference...')+'" value="'+escH(e.giftNoteIn||'')+'" style="width:100%;padding:8px 10px;background:'+(inIsKind?'rgba(212,175,55,.06)':'rgba(255,255,255,.04)')+';border:1px solid '+(inIsKind?'rgba(212,175,55,.3)':'rgba(212,175,55,.2)')+';border-radius:6px;color:var(--tx);font-size:12px;outline:none;font-family:var(--f);margin-bottom:12px"/>';
+
+  h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Gift at Check-Out</div>';
+  var outIsKind=(e.giftTypeOut==='Gift-in-Kind');
+  if(outIsKind){
+    h+='<div style="padding:8px 10px;background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.2);border-radius:7px;margin-bottom:8px;font-size:11px;color:var(--gold)">&#x1F381; Physical gift — enter item name below. Amount is the estimated value (optional).</div>';
+  }
+  h+='<div style="display:flex;gap:8px;margin-bottom:6px">';
+  h+='<span style="font-size:'+(outIsKind?'13':'16')+'px;color:'+(outIsKind?'var(--txd)':'var(--tx)')+';align-self:center">'+cur()+'</span>';
+  h+='<input type="number" id="editGiftOut" min="0" step="any" value="'+(e.giftAmountOut!=null&&e.giftAmountOut>0?e.giftAmountOut:'')+'" placeholder="'+(outIsKind?'Estimated value (optional)':'0')+'" style="flex:1;padding:9px;background:rgba(255,255,255,.05);border:1px solid rgba(123,156,255,.3);border-radius:6px;color:var(--tx);font-size:15px;outline:none;font-family:var(--m)"/>';
+  h+='<select id="editGiftOutType" style="padding:9px 8px;background:rgba(0,0,0,.3);border:1px solid rgba(212,175,55,.3);border-radius:6px;color:var(--tx);font-size:12px">';
+  ['Cash','Cheque','UPI','Gift-in-Kind'].forEach(function(t){h+='<option value="'+t+'"'+(e.giftTypeOut===t?' selected':(!e.giftTypeOut&&t==='Cash'?' selected':''))+'>'+t+'</option>';});
+  h+='</select></div>';
+  h+='<div style="font-size:9px;color:'+(outIsKind?'var(--gold)':'var(--txd)')+';margin-bottom:4px">'+(outIsKind?'&#x1F381; Item Name / Description *':'Note (optional)')+'</div>';
+  h+='<input type="text" id="editGiftOutNote" placeholder="'+(outIsKind?'e.g. Mixer Grinder, Gold Chain, Saree Set...':'Envelope no., reference...')+'" value="'+escH(e.giftNoteOut||'')+'" style="width:100%;padding:8px 10px;background:'+(outIsKind?'rgba(212,175,55,.06)':'rgba(255,255,255,.04)')+';border:1px solid '+(outIsKind?'rgba(212,175,55,.3)':'rgba(212,175,55,.2)')+';border-radius:6px;color:var(--tx);font-size:12px;outline:none;font-family:var(--f);margin-bottom:12px"/>';
+
+  var hasInGift=(e.giftAmountIn>0)||(e.giftTypeIn==='Gift-in-Kind'&&e.giftNoteIn);
+  var hasOutGift=(e.giftAmountOut>0)||(e.giftTypeOut==='Gift-in-Kind'&&e.giftNoteOut);
+  if(hasInGift||hasOutGift){
+    h+='<div style="font-size:10px;color:var(--gold);text-align:center;margin-bottom:8px;padding:6px;background:rgba(212,175,55,.06);border-radius:6px">';
+    if(e.giftAmountIn>0||e.giftAmountOut>0) h+='&#x1F4B5; Cash total: '+cur()+((e.giftAmountIn||0)+(e.giftAmountOut||0)).toLocaleString('en-IN');
+    if(inIsKind&&e.giftNoteIn) h+=(e.giftAmountIn>0?' · ':'')+'&#x1F381; '+escH(e.giftNoteIn);
+    if(outIsKind&&e.giftNoteOut) h+=' &#x1F381; '+escH(e.giftNoteOut);
+    h+='</div>';
+  }
+  h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Member Food Preferences</div>';
+  var mf=e.memberFoods||[];
+  for(var i=0;i<e.visitors;i++){
+    var pref=mf[i]||'';
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;padding:6px 10px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid rgba(255,255,255,.07)">';
+    h+='<span style="font-size:12px;color:var(--tx)">Guest '+(i+1)+'</span>';
+    h+='<select onchange="updateEditFood('+i+',this.value)" style="padding:4px 8px;background:rgba(0,0,0,.3);border:1px solid rgba(212,175,55,.3);border-radius:5px;color:var(--tx);font-size:12px;cursor:pointer">';
+    h+='<option value=""'+(pref===''?' selected':'')+'>Not set</option>';
+    h+='<option value="Veg"'+(pref==='Veg'?' selected':'')+'>🥗 Veg</option>';
+    h+='<option value="Non-Veg"'+(pref==='Non-Veg'?' selected':'')+'>🍗 Non-Veg</option>';
+    h+='</select></div>';
+  }
+  h+='<div style="font-size:9px;color:#5a4a3a;margin-bottom:12px">⚠ Changes are logged with timestamp</div>';
+  h+='<div style="display:flex;gap:8px">';
+  h+='<button class="bg" onclick="closeEdit()">Cancel</button>';
+  h+='<button class="bp" style="flex:2;margin-top:0" onclick="saveEdit()">&#10003; Save Changes</button></div>';
+  document.getElementById('editBody').innerHTML=h;
+  // temp store for food edits
+  window._editFoods=mf.slice(0,e.visitors);
+  document.getElementById('editMod').style.display='flex';
+}
+function updateEditFood(idx,val){if(!window._editFoods)window._editFoods=[];window._editFoods[idx]=val;}
+function closeEdit(){document.getElementById('editMod').style.display='none';EDIT_IDX=-1;}
+function saveEdit(){
+  var idx=EDIT_IDX;if(idx<0)return;
+  var vis=parseInt(document.getElementById('editVis').value)||1;
+  var table=document.getElementById('editTable').value.trim();
+  var gIn=parseFloat(document.getElementById('editGiftIn').value);if(isNaN(gIn))gIn=0;
+  var gOut=parseFloat(document.getElementById('editGiftOut').value);if(isNaN(gOut))gOut=0;
+  var gInType=document.getElementById('editGiftInType').value||'Cash';
+  var gOutType=document.getElementById('editGiftOutType').value||'Cash';
+  var gInNote=document.getElementById('editGiftInNote').value.trim();
+  var gOutNote=document.getElementById('editGiftOutNote').value.trim();
+  var foods=window._editFoods||[];
+  var entry=EVENTS[CUR_EV].entries[idx];
+  var log={ts:Date.now(),old:{visitors:entry.visitors,table:entry.table,giftTotal:entry.giftTotal,giftAmountIn:entry.giftAmountIn,giftAmountOut:entry.giftAmountOut,memberFoods:entry.memberFoods?entry.memberFoods.slice():[]}};
+  entry.visitors=vis;entry.table=table;
+  entry.giftAmountIn=gIn;entry.giftTypeIn=gInType;entry.giftNoteIn=gInNote;
+  entry.giftAmountOut=gOut;entry.giftTypeOut=gOutType;entry.giftNoteOut=gOutNote;
+  entry.giftKindIn=(gInType==='Gift-in-Kind'&&gInNote)?true:false;
+  entry.giftKindOut=(gOutType==='Gift-in-Kind'&&gOutNote)?true:false;
+  entry.giftTotal=gIn+gOut;
+  entry.hasAnyGift=(gIn>0)||(gOut>0)||(entry.giftKindIn)||(entry.giftKindOut);
+  entry.memberFoods=foods.slice(0,vis);
+  entry.vegCount=entry.memberFoods.filter(function(x){return x==='Veg';}).length;
+  entry.nvCount=entry.memberFoods.filter(function(x){return x==='Non-Veg';}).length;
+  if(!entry.editLog)entry.editLog=[];entry.editLog.push(log);
+  sAll2();closeEdit();render();toast('Entry updated!');
+}
+
+// ============================================================
+// SCAN TAB
+// ============================================================
+function upiQR(divId){setTimeout(function(){var box=document.getElementById(divId);if(box&&typeof QRCode!=='undefined'){new QRCode(box,{text:'upi://pay?pa=narender13in@okaxis&pn=Narender+Raj&mc=0000&tid=&tr=&tn=Wedding+Gift&am=&cu=INR&url=',width:150,height:150,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});}},100);}
+
+function rScan(){
+  var el=document.getElementById('main');var h='';
+  // Event switcher strip
+  if(EVENTS.length>1){
+    h+='<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px">';
+    EVENTS.forEach(function(ev,i){h+='<button class="evpill'+(i===CUR_EV?' on':'')+'" onclick="switchEvent('+i+')">'+escH(ev.name)+'</button>';});
+    h+='</div>';
+  }
+  if(LAST&&STEP==='scan'){
+    var isEx=LAST._la==='exit';
+    h+='<div class="laste"><div style="font-size:15px;color:'+(isEx?'var(--blue)':'var(--gold)')+'">'+(isEx?'&#8599;':'&#10003;')+'</div>';
+    h+='<div><div style="font-size:9px;color:#a09070;letter-spacing:2px;text-transform:uppercase">'+(isEx?'Last Exit':'Last Check-In')+'</div>';
+    h+='<div style="font-size:14px">'+LAST.familyName+'</div>';
+    h+='<div style="font-size:10px;color:var(--txd)">'+LAST.visitors+' guest'+(LAST.visitors>1?'s':'')+' &middot; '+LAST.table+' &middot; '+fT(LAST.timestamp)+'</div></div></div>';
+  }
+  h+='<div class="panel"><div class="cn tl"></div><div class="cn tr"></div><div class="cn bl"></div><div class="cn br"></div>';
+  if(F().length===0&&STEP==='scan'){
+    h+='<div class="center"><div style="font-size:36px;margin-bottom:10px">&#x1F46A;</div>';
+    h+='<div style="font-size:15px;margin-bottom:8px">No Families Added</div>';
+    h+='<div style="font-size:12px;color:var(--txd);margin-bottom:20px">Import your guest list from the Families tab first.</div>';
+    h+='<button class="bs" onclick="go(1)">Go to Families &rarr;</button></div>';
+  } else if(STEP==='scan'){
+    h+='<div class="atog">';
+    h+='<button class="abtn ai'+(AMODE==='in'?' on':'')+'" onclick="setAMode(\'in\')">&#10003; Check In</button>';
+    h+='<button class="abtn ao'+(AMODE==='out'?' on':'')+'" onclick="setAMode(\'out\')">&uarr; Check Out</button>';
+    h+='</div>';
+    h+='<div class="mtog"><button class="mbtn'+(SMODE==='camera'?' on':'')+'" onclick="setSMode(\'camera\')">&#x1F4F7; Scan QR</button>';
+    h+='<button class="mbtn'+(SMODE==='manual'?' on':'')+'" onclick="setSMode(\'manual\')">&#x2328; Type ID</button></div>';
+    if(SMODE==='camera'){
+      var ex=AMODE==='out';
+      h+='<button onclick="openCamOverlay()" style="display:block;width:100%;padding:22px 16px;margin-bottom:12px;background:rgba(0,0,0,.5);border:2px solid '+(ex?'rgba(123,156,255,.5)':'rgba(212,175,55,.5)')+';border-radius:12px;cursor:pointer;text-align:center;font-family:Georgia,serif">';
+      h+='<div style="font-size:44px;margin-bottom:8px">&#x1F4F7;</div>';
+      h+='<div style="font-size:15px;color:#f0e6d3;margin-bottom:4px">'+(ex?'Tap to Scan QR - Check Out':'Tap to Scan QR - Check In')+'</div>';
+      h+='<div style="font-size:11px;color:#7a6a5a">Opens camera scanner</div></button>';
+    } else {
+      h+='<div class="center" style="margin-bottom:14px"><div style="font-size:36px;margin-bottom:5px">'+(AMODE==='in'?'&#x2B21;':'&uarr;')+'</div>';
+      h+='<div style="font-size:15px;margin-bottom:4px">'+(AMODE==='in'?'Enter Family ID to Check In':'Enter Family ID to Check Out')+'</div>';
+      h+='<div style="font-size:11px;color:var(--txd);margin-bottom:14px">Type the code from the QR card</div></div>';
+      h+='<input class="cinp" id="ci" type="text" placeholder="FAM-..." maxlength="13" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="text"/>';
+      if(AMODE==='in') h+='<button class="bp" onclick="doManual()">Verify &amp; Check In &rarr;</button>';
+      else h+='<button class="bx" onclick="doManual()">Record Exit &rarr;</button>';
+    }
+    h+='<div style="margin-top:16px;border-top:1px solid rgba(255,255,255,.05);padding-top:12px">';
+    h+='<div style="font-size:9px;color:#5a4a3a;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;text-align:center">Quick Select</div>';
+    h+='<div class="qgrid">';
+    F().forEach(function(f){
+      var ent=E().find(function(e){return e.familyId===f.id;});var rem=ent?getRemaining(ent):0;
+      var cls=ent?(rem<=0?'qo':'qi'):'qn';
+      h+='<button class="qb '+cls+'" onclick="quickChk(\''+f.id+'\')">'+f.id+(ent?(rem<=0?'&uarr;':'&#10003;'):'')+'</button>';
+    });
+    h+='</div></div>';
+  } else if(STEP==='notfound'){
+    h+='<div class="center"><div style="font-size:40px;margin-bottom:8px">&#x2717;</div>';
+    h+='<div style="font-size:16px;color:var(--red);margin-bottom:8px">Family Not Found</div>';
+    h+='<div style="font-size:12px;color:var(--txd);margin-bottom:22px">Code <span style="font-family:var(--m)">'+(MF||'?')+'</span> not on guest list.</div>';
+    h+='<button class="bs" onclick="rst()">Try Again</button></div>';
+  } else if(STEP==='confirm'&&DUP){
+    var p=E().find(function(e){return e.familyId===MF.id;});var rem2=p?getRemaining(p):0;
+    h+='<div class="center"><div style="font-size:34px;margin-bottom:8px">&#x26A0;</div>';
+    h+='<div style="font-size:14px;color:var(--warn);margin-bottom:5px">Already Checked In</div>';
+    h+='<div style="font-size:19px;margin-bottom:3px">'+MF.name+'</div>';
+    h+='<div style="font-size:12px;color:var(--txd);margin-bottom:4px">'+MF.table+'</div>';
+    if(p) h+='<div style="font-size:11px;color:#5a4a3a;margin-bottom:4px">Entered: '+fT(p.timestamp)+' &middot; '+p.visitors+' guest'+(p.visitors>1?'s':'')+'</div>';
+    h+='<div style="font-size:11px;color:var(--gold);margin-bottom:20px">'+rem2+' guest'+(rem2>1?'s':'')+' still inside</div>';
+    h+='<button class="bs" onclick="rst()">&larr; Back</button></div>';
+  } else if(STEP==='confirm'&&!DUP){
+    var maxG=MF.maxGuests||0;var over=maxG>0&&VIS>maxG;var atLim=maxG>0&&VIS===maxG;var near=maxG>0&&VIS===maxG-1;
+    var limColor=over?'var(--red)':atLim?'var(--warn)':near?'var(--warn)':'var(--grn)';
+    var tConflict=E().find(function(e){return e.familyId!==MF.id&&e.table&&MF.table&&e.table.trim().toLowerCase()===MF.table.trim().toLowerCase()&&getRemaining(e)>0;});
+    h+='<div style="font-size:9px;color:#a09070;letter-spacing:3px;text-transform:uppercase;text-align:center;margin-bottom:5px">Welcome</div>';
+    h+='<div style="font-size:21px;text-align:center;margin-bottom:3px">'+MF.name+'</div>';
+    h+='<div style="font-size:13px;color:var(--gold);text-align:center;margin-bottom:2px">'+MF.table+'</div>';
+    if(MF.phone) h+='<div style="font-size:11px;color:var(--txd);text-align:center;margin-bottom:8px;font-family:var(--m)">'+MF.phone+'</div>';
+    if(maxG>0){var pct=Math.min(100,Math.round(VIS/maxG*100));h+='<div class="pbar-wrap"><div class="pbar-top"><span style="font-size:9px;color:var(--txd);text-transform:uppercase">Limit</span><span style="font-size:9px;color:'+limColor+';font-weight:bold">'+VIS+' / '+maxG+'</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:'+pct+'%;background:'+limColor+'"></div></div></div>';}
+    if(tConflict) h+='<div class="warn-box ww"><div style="font-size:12px;color:var(--warn);font-weight:bold;margin-bottom:2px">&#x26A0; Table Conflict!</div><div style="font-size:11px;color:#c09040">'+tConflict.familyName+' already at '+MF.table+'</div></div>';
+    h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;text-align:center;margin-bottom:8px">Guests Arriving</div>';
+    h+='<div class="vrow"><button class="vb" onclick="chv(-1)">&minus;</button><span class="vn" id="vn" style="color:'+limColor+'">'+VIS+'</span><button class="vb" onclick="chv(1)">+</button></div>';
+    if(over){h+='<div class="warn-box wr"><div style="font-size:13px;color:var(--red);font-weight:bold">&#x1F6AB; Guest Limit Exceeded! Max '+maxG+'</div></div>';
+      h+='<div class="row"><button class="bg" onclick="rst()">Cancel</button><button class="bp" style="flex:2;margin-top:0;opacity:.35;cursor:not-allowed" disabled>Cannot Check-In</button></div>';
+    } else {
+      h+='<div id="mfoodSection">'+buildMFoodUI(VIS)+'</div>';
+      h+='<div class="row"><button class="bg" onclick="rst()">Cancel</button><button class="bp" style="flex:2;margin-top:0'+(atLim?';background:linear-gradient(135deg,#e0a030,#c08020)':'')+'" onclick="doIn()">'+(atLim?'&#x26A0; At Capacity - Confirm':'&#10003; Confirm Check-In')+'</button></div>';
+    }
+  } else if(STEP==='notchecked'){
+    h+='<div class="center"><div style="font-size:34px;margin-bottom:8px">&#x26A0;</div>';
+    h+='<div style="font-size:14px;color:var(--warn);margin-bottom:5px">Not Checked In Yet</div>';
+    h+='<div style="font-size:19px;margin-bottom:4px">'+(MF?MF.name:'')+'</div>';
+    h+='<div style="font-size:12px;color:var(--txd);margin-bottom:22px">This family has not entered yet.</div>';
+    h+='<button class="bs" onclick="rst()">&larr; Back</button></div>';
+  } else if(STEP==='allexited'){
+    var p2=E().find(function(e){return e.familyId===MF.id;});
+    h+='<div class="center"><div style="font-size:34px;margin-bottom:8px">&uarr;</div>';
+    h+='<div style="font-size:14px;color:var(--blue);margin-bottom:5px">All Guests Exited</div>';
+    h+='<div style="font-size:19px;margin-bottom:3px">'+MF.name+'</div>';
+    h+='<div style="font-size:12px;color:var(--txd);margin-bottom:4px">All '+(p2?p2.visitors:'')+' guests have left</div>';
+    if(p2) h+='<div style="font-size:10px;color:#5a4a3a;margin-bottom:22px">Entry: '+fT(p2.timestamp)+'</div>';
+    h+='<button class="bs" onclick="rst()">&larr; Back</button></div>';
+  } else if(STEP==='confirmexit'){
+    var p3=E().find(function(e){return e.familyId===MF.id;});
+    var tIn=p3?p3.visitors:0;var exd=p3?(p3.exitedCount||0):0;var rem3=tIn-exd;
+    h+='<div style="text-align:center">';
+    h+='<div style="font-size:9px;color:var(--blue);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px">Check Out</div>';
+    h+='<div style="font-size:21px;margin-bottom:3px">'+MF.name+'</div>';
+    h+='<div style="font-size:13px;color:var(--gold);margin-bottom:10px">'+MF.table+'</div>';
+    h+='<div style="display:flex;justify-content:center;gap:14px;margin-bottom:16px;padding:11px;background:rgba(0,0,0,.3);border-radius:8px">';
+    h+='<div><div style="font-size:20px;color:var(--grn)">'+tIn+'</div><div style="font-size:7px;color:var(--txm);text-transform:uppercase">In</div></div>';
+    h+='<div><div style="font-size:20px;color:var(--blue)">'+exd+'</div><div style="font-size:7px;color:var(--txm);text-transform:uppercase">Exited</div></div>';
+    h+='<div><div style="font-size:20px;color:var(--gold)">'+rem3+'</div><div style="font-size:7px;color:var(--txm);text-transform:uppercase">Inside</div></div></div>';
+    h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">How many leaving now?</div>';
+    h+='<div class="vrow"><button class="vb" onclick="chvX(-1)">&minus;</button><span class="vn" id="vx" style="color:var(--blue)">'+VIS+'</span><button class="vb" onclick="chvX(1,'+rem3+')">+</button></div>';
+    h+='<div style="font-size:10px;color:var(--txd);margin-bottom:14px">'+(rem3-VIS)+' will remain inside</div>';
+    h+='<div class="row"><button class="bg" onclick="rst()">Cancel</button><button class="bx" style="flex:2;margin-top:0" onclick="doOut()">&uarr; Confirm Exit ('+VIS+')</button></div></div>';
+  } else if(STEP==='donein'){
+    var fam2=F().find(function(f){return f.id===(LAST?LAST.familyId:'');});
+    var atLim2=fam2&&fam2.maxGuests&&LAST&&LAST.visitors>=fam2.maxGuests;
+    h+='<div class="center"><div class="tick tg">&#10003;</div>';
+    h+='<div style="font-size:16px;color:var(--grn);margin-bottom:6px">Checked In Successfully</div>';
+    if(LAST){
+      h+='<div style="font-size:19px;margin-bottom:3px">'+LAST.familyName+'</div>';
+      h+='<div style="font-size:12px;color:var(--txd);margin-bottom:3px">'+LAST.table+' &middot; '+LAST.visitors+' guest'+(LAST.visitors>1?'s':'')+'</div>';
+      if(atLim2) h+='<div style="font-size:10px;color:var(--warn);margin-bottom:3px">&#x26A0; Table at full capacity</div>';
+      h+='<div style="font-size:10px;color:#5a4a3a;margin-bottom:12px">Entry: '+fT(LAST.timestamp)+'</div>';
+      if(LAST.memberFoods&&LAST.memberFoods.length>0){
+        var sv=LAST.vegCount||0,snv=LAST.nvCount||0,sp=LAST.visitors-sv-snv;
+        h+='<div style="margin-bottom:12px;padding:9px 14px;background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.2);border-radius:8px;text-align:center">';
+        h+='<div style="font-size:9px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Food Preference Recorded</div>';
+        h+='<div style="display:flex;justify-content:center;gap:14px">';
+        if(sv>0) h+='<span style="font-size:13px;color:#5eb87a">&#x1F957; '+sv+' Veg</span>';
+        if(snv>0) h+='<span style="font-size:13px;color:#e05555">&#x1F357; '+snv+' Non-Veg</span>';
+        if(sp>0) h+='<span style="font-size:13px;color:var(--warn)">'+sp+' Not Set</span>';
+        h+='</div><div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-top:7px">';
+        LAST.memberFoods.forEach(function(pref,mi){var mc=pref==='Veg'?'#5eb87a':pref==='Non-Veg'?'#e05555':'#7a6a5a';var micon=pref==='Veg'?'&#x1F957;':pref==='Non-Veg'?'&#x1F357;':'?';h+='<span style="font-size:9px;color:'+mc+';background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:2px 6px">G'+(mi+1)+' '+micon+'</span>';});
+        h+='</div></div>';
+      }
+    }
+    h+='</div>';
+    h+='<div id="giftPanelIn">'+buildGiftPanel('checkin')+'</div>';
+    h+='<div style="margin:0 0 14px;padding:14px;background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.2);border-radius:12px;text-align:center">';
+    h+='<div style="font-size:10px;color:#d4af37;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">&#x1F495; Wedding Gift</div>';
+    h+='<div style="font-size:12px;color:#a09070;margin-bottom:10px">Scan to send a gift via any UPI app</div>';
+    h+='<div style="background:#fff;border-radius:10px;padding:12px;display:inline-block;margin-bottom:8px"><div id="upiQRin"></div></div>';
+    h+='<div style="font-size:13px;color:#f0e6d3;margin-bottom:2px">Narender Raj</div>';
+    h+='<div style="font-size:11px;color:#a09070;font-family:var(--m)">narender13in@okaxis</div>';
+    h+='<div style="font-size:10px;color:#5a4a3a;margin-top:6px">GPay &middot; PhonePe &middot; Paytm &middot; Any UPI app</div></div>';
+    h+='<button class="bp" style="width:auto;padding:11px 32px" onclick="rst()">Next Guest &rarr;</button>';
+  } else if(STEP==='doneout'){
+    var tIn2=LAST?LAST.visitors:0;var exd2=LAST?(LAST.exitedCount||0):0;var stillIn=tIn2-exd2;
+    h+='<div class="center"><div class="tick tb">&uarr;</div>';
+    h+='<div style="font-size:16px;color:var(--blue);margin-bottom:6px">Exit Recorded</div>';
+    if(LAST){
+      h+='<div style="font-size:19px;margin-bottom:8px">'+LAST.familyName+'</div>';
+      h+='<div style="display:flex;justify-content:center;gap:12px;margin-bottom:12px;padding:10px;background:rgba(0,0,0,.3);border-radius:8px">';
+      h+='<div><div style="font-size:18px;color:var(--grn)">'+tIn2+'</div><div style="font-size:7px;color:var(--txm);text-transform:uppercase">Total In</div></div>';
+      h+='<div><div style="font-size:18px;color:var(--blue)">'+exd2+'</div><div style="font-size:7px;color:var(--txm);text-transform:uppercase">Exited</div></div>';
+      h+='<div><div style="font-size:18px;color:var(--gold)">'+stillIn+'</div><div style="font-size:7px;color:var(--txm);text-transform:uppercase">Still Inside</div></div></div>';
+      h+='<div style="font-size:14px;color:'+(stillIn===0?'var(--blue)':'var(--gold)')+';margin-bottom:12px">';
+      h+=(stillIn===0?'&#10003; All guests have exited':stillIn+' guest'+(stillIn>1?'s':'')+' still inside');h+='</div>';
+    }
+    h+='</div>';
+    h+='<div id="giftPanelOut">'+buildGiftPanel('checkout')+'</div>';
+    h+='<button class="bx" style="width:auto;padding:11px 32px" onclick="rst()">Next Guest &rarr;</button>';
+  } else if(STEP==='testcam'){
+    h+='<div class="center" style="margin-bottom:12px"><div style="font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase">Camera Self Test</div>';
+    h+='<div style="font-size:12px;color:var(--txd);margin-top:4px">Scan the test QR code to verify</div></div>';
+    h+='<button onclick="openCamOverlay()" style="display:block;width:100%;padding:18px;margin-bottom:12px;background:rgba(0,0,0,.5);border:2px solid rgba(212,175,55,.5);border-radius:12px;cursor:pointer;text-align:center;font-family:Georgia,serif">';
+    h+='<div style="font-size:36px;margin-bottom:6px">&#x1F4F7;</div><div style="font-size:14px;color:#f0e6d3">Tap to Open Camera</div>';
+    h+='<div style="font-size:11px;color:#7a6a5a;margin-top:3px">Then scan the test QR below</div></button>';
+    h+='<div style="background:#fff;border-radius:10px;padding:14px;display:flex;justify-content:center;margin-bottom:10px"><div id="testQRInline"></div></div>';
+    h+='<div style="font-size:10px;color:var(--txm);text-align:center;margin-bottom:14px;font-family:var(--m)">TEST-CAMCHECK</div>';
+    h+='<button class="bg" style="width:100%" onclick="endSelfTest(false)">&#x2715; Cancel Test</button>';
+  } else if(STEP==='testresult'){
+    h+='<div class="center"><div style="font-size:60px;margin-bottom:12px">&#x2705;</div>';
+    h+='<div style="font-size:18px;color:var(--grn);margin-bottom:8px">Camera is Working!</div>';
+    h+='<div style="font-size:13px;color:var(--txd);margin-bottom:24px">QR code detected successfully.</div>';
+    h+='<button class="bp" style="width:auto;padding:12px 32px" onclick="endSelfTest(true)">&#10003; Done</button></div>';
+  }
+  h+='</div>';
+  el.innerHTML=h;
+  if(STEP==='scan'&&SMODE==='manual'){var inp=document.getElementById('ci');if(inp){setTimeout(function(){inp.focus();},100);inp.addEventListener('keydown',function(ev){if(ev.key==='Enter')doManual();});}}
+  if(STEP==='testcam'){setTimeout(function(){var box=document.getElementById('testQRInline');if(box&&box.children.length===0&&typeof QRCode!=='undefined')new QRCode(box,{text:'TEST-CAMCHECK',width:160,height:160,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});},100);}
+  if(STEP==='donein') upiQR('upiQRin');
+}
+
+function setSMode(m){if(m==='manual')stopCam();SMODE=m;render();}
+function setAMode(m){stopCam();AMODE=m;render();}
+function chv(d){VIS=Math.max(1,VIS+d);if(STEP==='confirm')render();else{var e=document.getElementById('vn');if(e)e.textContent=VIS;}}
+function chvX(d,max){VIS=Math.max(1,Math.min(max||99,VIS+d));var e=document.getElementById('vx');if(e)e.textContent=VIS;}
+function doManual(){var inp=document.getElementById('ci');var code=(inp?inp.value:'').trim().toUpperCase();if(!code)return;processCode(code);}
+function quickChk(id){
+  var fam=F().find(function(f){return f.id===id;});if(!fam)return;MF=fam;
+  if(AMODE==='in'){DUP=!!E().find(function(e){return e.familyId===id;});VIS=1;STEP='confirm';render();}
+  else{var ent=E().find(function(e){return e.familyId===id;});if(!ent){STEP='notchecked';render();return;}if(getRemaining(ent)<=0){STEP='allexited';render();return;}VIS=1;STEP='confirmexit';render();}
+}
+function doIn(){
+  if(DUP||!MF)return;if(MF.maxGuests&&VIS>MF.maxGuests){toast('Cannot check in - exceeds guest limit');return;}
+  var memberFoods=[];for(var i=0;i<VIS;i++)memberFoods.push(MFOOD[i]||'');
+  var vegCount=memberFoods.filter(function(x){return x==='Veg';}).length;
+  var nvCount=memberFoods.filter(function(x){return x==='Non-Veg';}).length;
+  var entry={id:Date.now(),familyId:MF.id,familyName:MF.name,table:MF.table,phone:MF.phone||'',
+    visitors:VIS,timestamp:Date.now(),exitTime:null,exitedCount:0,exitEvents:[],_la:'in',
+    memberFoods:memberFoods,vegCount:vegCount,nvCount:nvCount};
+  EVENTS[CUR_EV].entries.unshift(entry);LAST=entry;MFOOD=[];sAll2();STEP='donein';render();
+  if(WA_ALERTS) setTimeout(function(){sendWAAlert(buildCheckinAlert(entry));},500);
+}
+function doOut(){
+  if(!MF)return;var idx=E().findIndex(function(e){return e.familyId===MF.id;});if(idx<0)return;
+  var n=VIS||1;
+  EVENTS[CUR_EV].entries[idx].exitedCount=(EVENTS[CUR_EV].entries[idx].exitedCount||0)+n;
+  if(!EVENTS[CUR_EV].entries[idx].exitEvents)EVENTS[CUR_EV].entries[idx].exitEvents=[];
+  EVENTS[CUR_EV].entries[idx].exitEvents.push({count:n,time:Date.now()});
+  if(EVENTS[CUR_EV].entries[idx].exitedCount>=EVENTS[CUR_EV].entries[idx].visitors){EVENTS[CUR_EV].entries[idx].exitedCount=EVENTS[CUR_EV].entries[idx].visitors;EVENTS[CUR_EV].entries[idx].exitTime=Date.now();}
+  EVENTS[CUR_EV].entries[idx]._la='exit';LAST=EVENTS[CUR_EV].entries[idx];sAll2();STEP='doneout';render();
+}
+function rst(){if(TEST_MODE){endSelfTest(false);return;}STEP='scan';MF=null;DUP=false;VIS=1;MFOOD=[];render();}
+
+// ============================================================
+// FAMILIES TAB
+// ============================================================
+function rFam(){
+  var el=document.getElementById('main');var h='';
+  // Search box
+  h+='<input class="srch" id="famSearch" type="text" placeholder="&#x1F50D; Search by name, table, phone..." value="'+escH(FAM_SEARCH)+'" oninput="FAM_SEARCH=this.value;rFam()"/>';
+  h+='<div class="panel"><div class="cn tl"></div><div class="cn tr"></div><div class="cn bl"></div><div class="cn br"></div>';
+  h+='<div style="font-size:9px;color:#a09070;letter-spacing:3px;text-transform:uppercase;margin-bottom:12px">Import Guest List via CSV</div>';
+  h+='<div class="tbox"><div class="tbox-t">Required CSV format</div>';
+  h+='<div class="tbox-c">name,phone,table,maxGuests\nThe Johnson Family,+91 9876543210,Table 1,4</div>';
+  h+='<button class="bsm be" style="margin-top:9px;width:100%;display:block" onclick="dlTpl()">&#x2193; Download Template CSV</button></div>';
+  h+='<div class="drop" id="dz" onclick="document.getElementById(\'fi\').click()">';
+  h+='<input style="display:none" type="file" id="fi" accept=".csv,text/csv" onchange="onFile(this)">';
+  h+='<div style="font-size:28px;margin-bottom:6px">&#x1F4C2;</div>';
+  h+='<div style="font-size:14px;color:var(--tx);margin-bottom:3px">Tap to select CSV file</div>';
+  h+='<div style="font-size:11px;color:var(--txd)">or drag &amp; drop here</div></div>';
+  if(PERR){var isWarn=PERR.startsWith('&#x26A0;')||PERR.startsWith('⚠');
+    h+='<div style="padding:9px 12px;border-radius:6px;font-size:11px;margin-bottom:10px;background:'+(isWarn?'rgba(224,160,48,.1)':'rgba(224,85,85,.1)')+';border:1px solid '+(isWarn?'rgba(224,160,48,.4)':'rgba(224,85,85,.3)')+';color:'+(isWarn?'var(--warn)':'var(--red)')+'">'+PERR+'</div>';}
+  if(PREV.length>0){
+    h+='<div style="font-size:10px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px">'+PREV.length+' new famil'+(PREV.length!==1?'ies':'y')+' ready to import</div>';
+    h+='<div class="pvw"><table><thead><tr><th>Name</th><th>Phone</th><th>Table</th><th>Max</th></tr></thead><tbody>';
+    PREV.slice(0,5).forEach(function(r){h+='<tr><td>'+r.name+'</td><td style="font-family:var(--m)">'+(r.phone||'—')+'</td><td>'+(r.table||'—')+'</td><td>'+(r.maxGuests||'—')+'</td></tr>';});
+    if(PREV.length>5) h+='<tr><td colspan="4" style="color:var(--txd);text-align:center">...and '+(PREV.length-5)+' more</td></tr>';
+    h+='</tbody></table></div>';
+    h+='<div class="row"><button class="bg" onclick="PREV=[];PERR=\'\';render()">Cancel</button><button class="bp" style="flex:2;margin-top:0" onclick="doImport()">&#10003; Import '+PREV.length+' Families</button></div>';
+  }
+  h+='</div>';
+  if(F().length===0){
+    h+='<div class="empty">No families yet.<br>Upload a CSV above to get started.</div>';
+  } else {
+    var fVeg=F().filter(function(f){return f.foodPref==='Veg';}).length;
+    var fNV=F().filter(function(f){return f.foodPref==='Non-Veg';}).length;
+    var fNP=F().filter(function(f){return f.foodPref==='No Preference';}).length;
+    var fPend=F().filter(function(f){return !f.foodPref;}).length;
+    h+='<div style="padding:10px 13px;background:rgba(212,175,55,.05);border:1px solid rgba(212,175,55,.15);border-radius:8px;margin-bottom:10px">';
+    h+='<div style="font-size:9px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px">Food Preference Summary</div>';
+    h+='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">';
+    h+='<span style="font-size:11px;color:#5eb87a">&#x1F957; Veg: '+fVeg+'</span>';
+    h+='<span style="font-size:11px;color:#e05555">&#x1F357; Non-Veg: '+fNV+'</span>';
+    h+='<span style="font-size:11px;color:var(--txd)">&#x1F37D; No Pref: '+fNP+'</span>';
+    h+='<span style="font-size:11px;color:var(--warn)">Pending: '+fPend+'</span></div>';
+    if(fPend>0){h+='<button onclick="sendAllFoodLinks()" style="width:100%;padding:9px;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.3);border-radius:7px;color:#25d366;font-size:11px;cursor:pointer;font-family:Georgia,serif">&#x1F4F2; Send Food Links via WhatsApp ('+fPend+' pending)</button>';}
+    else{h+='<div style="font-size:11px;color:#5eb87a;text-align:center">&#10003; All families have responded!</div>';}
+    h+='</div>';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
+    h+='<div style="font-size:12px;color:var(--txd)">'+F().length+' families</div>';
+    h+='<div style="display:flex;gap:6px"><button class="bsm be" onclick="printAll()">Print All QR</button><button class="bsm bc" onclick="clearFam()">&#x2715; Clear</button></div></div>';
+    // Filter by search
+    var fams=F().filter(function(f){if(!FAM_SEARCH)return true;var q=FAM_SEARCH.toLowerCase();return(f.name||'').toLowerCase().includes(q)||(f.table||'').toLowerCase().includes(q)||(f.phone||'').includes(q)||(f.id||'').toLowerCase().includes(q);});
+    if(fams.length===0) h+='<div class="empty">No families match your search.</div>';
+    fams.forEach(function(f,ii){
+      var i=F().indexOf(f);
+      var ent=E().find(function(e){return e.familyId===f.id;});
+      var rem=ent?getRemaining(ent):0;var bcls=ent?(rem<=0?'bo':'bi'):'bp2';var blbl=ent?(rem<=0?'Exited':'In'):'Pending';
+      var full=f.maxGuests&&ent&&rem>=f.maxGuests&&rem>0;
+      var tc=E().find(function(e){return e.familyId!==f.id&&e.table&&f.table&&e.table.trim().toLowerCase()===f.table.trim().toLowerCase()&&getRemaining(e)>0;});
+      var fp=f.foodPref||'';
+      var foodBadge='';
+      if(fp==='Veg') foodBadge='<span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(94,184,122,.12);color:#5eb87a;border:1px solid rgba(94,184,122,.3)">&#x1F957; Veg</span>';
+      else if(fp==='Non-Veg') foodBadge='<span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(224,100,50,.12);color:#e05555;border:1px solid rgba(224,100,50,.3)">&#x1F357; Non-Veg</span>';
+      else if(fp==='No Preference') foodBadge='<span style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(255,255,255,.06);color:var(--txd);border:1px solid rgba(255,255,255,.1)">No Pref</span>';
+      h+='<div class="fc"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
+      h+='<div style="flex:1;min-width:0">';
+      h+='<div style="font-size:10px;color:var(--gold);font-family:var(--m);letter-spacing:1px;margin-bottom:2px">'+f.id+'</div>';
+      h+='<div style="font-size:14px;color:var(--tx)">'+f.name+'</div>';
+      if(f.phone) h+='<div style="font-size:11px;color:#a09070;font-family:var(--m);margin-top:1px">'+f.phone+'</div>';
+      h+='<div style="font-size:11px;color:var(--txd);margin-top:2px">'+f.table+(f.maxGuests?' &middot; Max '+f.maxGuests:'')+(tc?' <span style="color:var(--warn)">&middot; conflict</span>':'')+'</div>';
+      h+='<div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;align-items:center">';
+      if(fp) h+=foodBadge;
+      h+='<button data-fid="'+f.id+'" onclick="sendFoodLink(this.dataset.fid)" style="font-size:9px;padding:3px 8px;border-radius:8px;background:rgba(37,211,102,.1);color:#25d366;border:1px solid rgba(37,211,102,.3);cursor:pointer;font-family:Georgia,serif">&#x1F4F2; '+(fp?'Resend':'Ask Food')+'</button>';
+      h+='<select data-fid="'+f.id+'" onchange="setFoodPref(this.dataset.fid,this.value);this.value=\'\'" style="font-size:9px;padding:3px 6px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(212,175,55,.25);color:var(--txd);cursor:pointer">';
+      h+='<option value="">Set manually</option><option value="Veg">&#x1F957; Veg</option><option value="Non-Veg">&#x1F357; Non-Veg</option><option value="No Preference">No Preference</option></select></div>';
+      h+='</div>';
+      h+='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">';
+      h+='<span class="badge '+bcls+'">'+blbl+'</span>';
+      if(full) h+='<span class="badge bf">Full</span>';
+      h+='<button class="bsm bq" onclick="showQR('+i+')">QR</button>';
+      h+='<button class="bd" onclick="delFam('+i+')">&#x2715;</button>';
+      h+='</div></div></div>';
+    });
+  }
+  el.innerHTML=h;
+  var dz=document.getElementById('dz');
+  if(dz){dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('ov');});dz.addEventListener('dragleave',function(){dz.classList.remove('ov');});dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('ov');if(e.dataTransfer.files[0])parseCSV(e.dataTransfer.files[0]);});}
+}
+
+function onFile(inp){if(inp.files[0])parseCSV(inp.files[0]);inp.value='';}
+function parseCSVLine(line){var r=[],cur='',q=false;for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(cur);cur='';}else{cur+=ch;}}r.push(cur);return r.map(function(s){return s.replace(/^"|"$/g,'').trim();});}
+function parseCSV(file){
+  var rd=new FileReader();
+  rd.onload=function(e){
+    var lines=e.target.result.split(/\r?\n/).filter(function(l){return l.trim();});
+    if(lines.length<2){PERR='CSV needs a header row and at least one data row.';PREV=[];render();return;}
+    var hdr=lines[0].split(',').map(function(h){return h.trim().toLowerCase().replace(/['"]/g,'');});
+    var ni=hdr.indexOf('name'),pi=hdr.indexOf('phone'),ti=hdr.indexOf('table'),mi=hdr.indexOf('maxguests');
+    if(ni===-1){PERR='Missing column "name".';PREV=[];render();return;}
+    var rows=[],seenNames=new Set(),dupesFile=[],ts=Date.now();
+    for(var i=1;i<lines.length;i++){
+      var cols=parseCSVLine(lines[i]);var name=(cols[ni]||'').trim();if(!name)continue;
+      var nl=name.toLowerCase();if(seenNames.has(nl)){dupesFile.push(name);continue;}seenNames.add(nl);
+      var rowId='FAM-'+ts.toString(36).slice(-4).toUpperCase()+i.toString(36).padStart(3,'0').toUpperCase();
+      rows.push({id:rowId,name:name,phone:pi>=0?(cols[pi]||'').trim():'',table:ti>=0?(cols[ti]||'').trim():'',maxGuests:mi>=0?parseInt(cols[mi])||0:0});
+    }
+    if(!rows.length){PERR='No valid rows found.';PREV=[];render();return;}
+    var dupesExist=rows.filter(function(r){return F().some(function(f){return f.name.toLowerCase()===r.name.toLowerCase();});}).map(function(r){return r.name;});
+    var w='';if(dupesFile.length>0)w+='⚠ Duplicates skipped: '+dupesFile.join(', ')+'. ';if(dupesExist.length>0)w+='⚠ Already in list: '+dupesExist.join(', ')+'.';PERR=w;
+    var final=rows.filter(function(r){return !F().some(function(f){return f.name.toLowerCase()===r.name.toLowerCase();});});
+    if(!final.length){PERR='⚠ All families already exist.';PREV=[];render();return;}
+    PREV=final;render();
+  };rd.readAsText(file);
+}
+function doImport(){EVENTS[CUR_EV].families=F().concat(PREV);PREV=[];PERR='';sAll2();render();toast(F().length+' families on guest list');}
+function delFam(i){if(!confirm('Remove "'+F()[i].name+'"?'))return;EVENTS[CUR_EV].families.splice(i,1);sAll2();render();}
+function clearFam(){if(!confirm('Remove ALL families? Check-in data stays.'))return;EVENTS[CUR_EV].families=[];sAll2();render();}
+function dlTpl(){var c='name,phone,table,maxGuests\nThe Johnson Family,+91 9876543210,Table 1,4\nThe Williams Family,+91 9876543211,Table 2,6\n';var b=new Blob([c],{type:'text/csv'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='wedding_guest_template.csv';a.click();URL.revokeObjectURL(u);}
+
+// QR MODAL
+function showQR(i){var f=F()[i];if(!f)return;AQR=f;document.getElementById('qrNm').textContent=f.name;document.getElementById('qrSb').textContent=f.table+(f.maxGuests?' · Max '+f.maxGuests+' guests':'');document.getElementById('qrId').textContent=f.id;var box=document.getElementById('qrCvs');box.innerHTML='';if(typeof QRCode!=='undefined')new QRCode(box,{text:f.id,width:175,height:175,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});else box.innerHTML='<div style="color:#888;font-size:11px;padding:20px">QR needs internet</div>';document.getElementById('qrMod').style.display='flex';}
+function closeQR(){document.getElementById('qrMod').style.display='none';AQR=null;}
+function dlQR(){var canvas=document.querySelector('#qrCvs canvas');if(!canvas){toast('QR not ready');return;}var W=270,H=330,c=document.createElement('canvas');c.width=W;c.height=H;var ctx=c.getContext('2d');ctx.fillStyle='#0a0a0f';ctx.fillRect(0,0,W,H);ctx.strokeStyle='#d4af37';ctx.lineWidth=2;ctx.strokeRect(9,9,W-18,H-18);ctx.fillStyle='#fff';ctx.fillRect(47,47,176,176);ctx.drawImage(canvas,47,47,176,176);ctx.fillStyle='#d4af37';ctx.font='bold 10px Georgia';ctx.textAlign='center';ctx.fillText('WEDDING RECEPTION',W/2,36);ctx.fillStyle='#f0e6d3';ctx.font='12px Georgia';var nm=AQR?AQR.name:'';ctx.fillText(nm.length>28?nm.slice(0,26)+'...':nm,W/2,242);ctx.fillStyle='#d4af37';ctx.font='11px Courier New';ctx.fillText(AQR?AQR.id:'',W/2,260);ctx.fillStyle='#7a6a5a';ctx.font='10px Georgia';ctx.fillText(AQR?AQR.table:'',W/2,276);ctx.fillStyle='#4a3a2a';ctx.font='9px Georgia';ctx.fillText('Present this QR at the entrance',W/2,298);var url=c.toDataURL('image/png');var a=document.createElement('a');a.href=url;a.download='qr_'+(AQR?AQR.id:'family')+'.png';a.click();toast('QR saved!');}
+function printQR(){if(!AQR)return;buildPrint([AQR]);setTimeout(function(){window.print();},300);}
+function printAll(){if(!F().length){toast('No families');return;}buildPrint(F());setTimeout(function(){window.print();},600);}
+function buildPrint(fams){var s=document.getElementById('pSheet');s.innerHTML='<div style="padding:16px;font-family:Georgia,serif"><h2 style="text-align:center;margin-bottom:18px;color:#333">Wedding Reception - Guest QR Codes</h2><div id="pCards" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center"></div></div>';var cards=document.getElementById('pCards');fams.forEach(function(f){var card=document.createElement('div');card.style.cssText='border:1px solid #ccc;border-radius:8px;padding:13px;width:195px;text-align:center;page-break-inside:avoid';card.innerHTML='<div style="font-size:11px;font-weight:bold;margin-bottom:2px">'+f.name+'</div><div style="font-size:9px;color:#888;margin-bottom:4px">'+f.table+(f.maxGuests?' · Max '+f.maxGuests:'')+'</div><div id="pq_'+f.id+'" style="display:inline-block;margin:5px 0"></div><div style="font-size:10px;color:#b8922a;font-family:monospace;margin-top:3px">'+f.id+'</div>'+(f.phone?'<div style="font-size:9px;color:#888;margin-top:2px">'+f.phone+'</div>':'');cards.appendChild(card);setTimeout(function(){try{if(typeof QRCode!=='undefined')new QRCode(document.getElementById('pq_'+f.id),{text:f.id,width:125,height:125,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});}catch(e){}},60);});}
+
+// ============================================================
+// REPORT TAB
+// ============================================================
+function rRep(){
+  var tIn=E().reduce(function(s,e){return s+e.visitors;},0);
+  var tEx=E().reduce(function(s,e){return s+(e.exitedCount||0);},0);
+  var el=document.getElementById('main');var h='';
+
+  h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">';
+  h+='<div><div style="font-size:9px;color:#a09070;letter-spacing:3px;text-transform:uppercase;margin-bottom:2px">Entry Log · '+WI().name+'</div>';
+  h+='<div style="font-size:17px;color:#f8f0e0">'+E().length+' Families &middot; '+tIn+' In &middot; '+tEx+' Exited</div></div>';
+  h+='<div style="display:flex;gap:6px"><button class="bsm be" '+(E().length===0?'disabled':'')+' onclick="expCSV()">&#x2193; CSV</button><button class="bsm bc" '+(E().length===0?'disabled':'')+' onclick="clrEnt()">&#x2715;</button></div></div>';
+
+  // Search + filter row
+  h+='<input class="srch" id="repSearch" type="text" placeholder="&#x1F50D; Search name, table, ID..." value="'+escH(REP_SEARCH)+'" oninput="REP_SEARCH=this.value;rRep()"/>';
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">';
+  ['all','inside','exited','pending'].forEach(function(f){h+='<button class="fchip'+(REP_FILTER===f?' on':'')+'" onclick="REP_FILTER=\''+f+'\';rRep()">'+{all:'All',inside:'Inside',exited:'Exited',pending:'Not Arrived'}[f]+'</button>';});
+  h+='</div>';
+
+  if(E().length===0&&REP_FILTER==='all'&&!REP_SEARCH){
+    h+='<div class="empty">No entries yet.<br>Check in guests from the Check-In tab.</div>';
+  } else {
+    var totalVeg=E().reduce(function(s,e){return s+(e.vegCount||0);},0);
+    var totalNV=E().reduce(function(s,e){return s+(e.nvCount||0);},0);
+    var totalGuests=E().reduce(function(s,e){return s+e.visitors;},0);
+    var totalUnset=totalGuests-totalVeg-totalNV;
+    var tGift=E().reduce(function(s,e){return s+(e.giftTotal!=null?e.giftTotal:0);},0);
+    h+='<div style="padding:12px 14px;background:rgba(212,175,55,.05);border:1px solid rgba(212,175,55,.18);border-radius:10px;margin-bottom:12px">';
+    h+='<div style="font-size:9px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:9px">&#x1F37D; Food Count · &#x1F4B0; Gift Total</div>';
+    h+='<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    h+='<div style="flex:1;min-width:65px;text-align:center;padding:8px 4px;background:rgba(94,184,122,.07);border:1px solid rgba(94,184,122,.2);border-radius:8px"><div style="font-size:20px;color:#5eb87a;font-weight:bold">'+totalVeg+'</div><div style="font-size:9px;color:#5eb87a">&#x1F957; Veg</div></div>';
+    h+='<div style="flex:1;min-width:65px;text-align:center;padding:8px 4px;background:rgba(224,85,85,.07);border:1px solid rgba(224,85,85,.2);border-radius:8px"><div style="font-size:20px;color:#e05555;font-weight:bold">'+totalNV+'</div><div style="font-size:9px;color:#e05555">&#x1F357; Non-Veg</div></div>';
+    if(totalUnset>0) h+='<div style="flex:1;min-width:65px;text-align:center;padding:8px 4px;background:rgba(224,160,48,.07);border:1px solid rgba(224,160,48,.2);border-radius:8px"><div style="font-size:20px;color:var(--warn);font-weight:bold">'+totalUnset+'</div><div style="font-size:9px;color:var(--warn)">Unset</div></div>';
+    if(tGift>0) h+='<div style="flex:1;min-width:65px;text-align:center;padding:8px 4px;background:rgba(212,175,55,.07);border:1px solid rgba(212,175,55,.2);border-radius:8px"><div style="font-size:16px;color:var(--gold);font-weight:bold">'+cur()+tGift.toLocaleString('en-IN')+'</div><div style="font-size:9px;color:var(--gold)">Total Gift</div></div>';
+    h+='</div></div>';
+
+    // filter + search entries
+    var entries=E().filter(function(e){
+      if(REP_SEARCH){var q=REP_SEARCH.toLowerCase();if(!(e.familyName||'').toLowerCase().includes(q)&&!(e.table||'').toLowerCase().includes(q)&&!(e.familyId||'').toLowerCase().includes(q)&&!(e.phone||'').includes(q))return false;}
+      var rem=getRemaining(e);
+      if(REP_FILTER==='inside')return rem>0;
+      if(REP_FILTER==='exited')return rem<=0&&(e.exitedCount||0)>0;
+      return true;
+    });
+    // "Not Arrived" filter
+    if(REP_FILTER==='pending'){
+      var pend2=F().filter(function(f){return !E().find(function(e){return e.familyId===f.id;});});
+      if(REP_SEARCH){var q2=REP_SEARCH.toLowerCase();pend2=pend2.filter(function(f){return(f.name||'').toLowerCase().includes(q2)||(f.table||'').toLowerCase().includes(q2);});}
+      if(pend2.length===0) h+='<div class="empty">No pending families found.</div>';
+      pend2.forEach(function(f){
+        h+='<div style="padding:8px 13px;border-radius:6px;margin-bottom:4px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between;opacity:.6">';
+        h+='<div><div style="font-size:12px;color:var(--txd)">'+f.name+'</div>';
+        if(f.phone) h+='<div style="font-size:10px;color:#5a4a3a;font-family:var(--m)">'+f.phone+'</div>';
+        h+='</div><span style="font-size:11px;color:#5a4a3a;align-self:center">'+f.table+'</span></div>';
+      });
+    } else {
+      if(entries.length===0) h+='<div class="empty">No entries match your filter.</div>';
+      entries.forEach(function(e,i){
+        var f=F().find(function(ff){return ff.id===e.familyId;});
+        var over=f&&f.maxGuests&&e.visitors>f.maxGuests;
+        var rem=getRemaining(e);var hasEx=!!e.exitTime;
+        var tc=E().find(function(o){return o.familyId!==e.familyId&&o.table&&e.table&&o.table.trim().toLowerCase()===e.table.trim().toLowerCase()&&getRemaining(o)>0&&rem>0;});
+        var entIdx=E().indexOf(e);
+        h+='<div class="ec '+(i===0&&REP_FILTER==='all'?'en':hasEx?'ex2':'eo')+'">';
+        h+='<div style="display:flex;align-items:center;justify-content:space-between">';
+        h+='<div style="display:flex;align-items:center;flex:1;min-width:0">';
+        h+='<div style="width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;margin-right:10px;'+(hasEx?'background:rgba(123,156,255,.1);border:1px solid rgba(123,156,255,.3);color:var(--blue)':'background:rgba(212,175,55,.1);border:1px solid var(--gdim);color:var(--gold)')+'">'+(hasEx?'&uarr;':'&#10003;')+'</div>';
+        h+='<div style="min-width:0">';
+        h+='<div style="font-size:13px;color:var(--tx)">'+e.familyName+'</div>';
+        h+='<div style="font-size:10px;color:#6a5a4a">'+e.familyId+' &middot; '+e.table+(tc?' <span style="color:var(--warn)">&middot; conflict</span>':'')+'</div>';
+        if(e.phone) h+='<div style="font-size:10px;color:#6a5a4a;font-family:var(--m)">'+e.phone+'</div>';
+        if(f&&f.foodPref){var fcol=f.foodPref==='Veg'?'#5eb87a':f.foodPref==='Non-Veg'?'#e05555':'var(--txd)';var ficon=f.foodPref==='Veg'?'&#x1F957;':f.foodPref==='Non-Veg'?'&#x1F357;':'';h+='<div style="font-size:9px;color:'+fcol+';margin-top:2px">'+ficon+' '+f.foodPref+' (family)</div>';}
+        if(e.memberFoods&&e.memberFoods.length>0){
+          var rv=e.vegCount||0,rnv=e.nvCount||0,rp=e.visitors-rv-rnv;
+          h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">';
+          if(rv>0) h+='<span style="font-size:9px;padding:1px 7px;border-radius:8px;background:rgba(94,184,122,.12);color:#5eb87a;border:1px solid rgba(94,184,122,.25)">&#x1F957; '+rv+'</span>';
+          if(rnv>0) h+='<span style="font-size:9px;padding:1px 7px;border-radius:8px;background:rgba(224,85,85,.1);color:#e05555;border:1px solid rgba(224,85,85,.25)">&#x1F357; '+rnv+'</span>';
+          if(rp>0) h+='<span style="font-size:9px;padding:1px 7px;border-radius:8px;background:rgba(224,160,48,.1);color:var(--warn);border:1px solid rgba(224,160,48,.25)">'+rp+' ?</span>';
+          h+='</div>';
+          h+='<div style="margin-top:3px;display:flex;gap:3px;flex-wrap:wrap">';
+          e.memberFoods.forEach(function(pref,mi){var mc=pref==='Veg'?'#5eb87a':pref==='Non-Veg'?'#e05555':'#7a6a5a';var micon=pref==='Veg'?'&#x1F957;':pref==='Non-Veg'?'&#x1F357;':'?';h+='<span style="font-size:8px;color:'+mc+';background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:1px 5px">G'+(mi+1)+' '+micon+'</span>';});
+          h+='</div>';
+        }
+        if(e.editLog&&e.editLog.length) h+='<div style="font-size:9px;color:var(--txm);margin-top:2px">✏ Edited '+e.editLog.length+'x</div>';
+        h+='</div></div>';
+        h+='<div style="text-align:right;flex-shrink:0">';
+        h+='<div style="font-size:12px;color:var(--gold)">'+e.visitors+' guest'+(e.visitors>1?'s':'')+'</div>';
+        if(over) h+='<div style="font-size:9px;padding:1px 6px;border-radius:6px;background:rgba(224,85,85,.12);color:var(--red);border:1px solid rgba(224,85,85,.3);margin-top:2px">+'+(e.visitors-f.maxGuests)+'</div>';
+        if(e.giftTotal>0||e.giftKindIn||e.giftKindOut){
+          h+='<div style="font-size:9px;color:var(--gold);margin-top:4px;line-height:1.7">';
+          if(e.giftTotal>0) h+='<div style="font-weight:bold">'+cur()+e.giftTotal.toLocaleString('en-IN')+' cash/cheque/UPI</div>';
+          // Check-in gift
+          if(e.giftTypeIn==='Gift-in-Kind'&&(e.giftKindIn||e.giftNoteIn)){
+            h+='<div style="color:#c0a860">&#x1F381; Physical gift (in): '+escH(e.giftNoteIn||'Gift-in-Kind')+(e.giftAmountIn>0?' — est. '+cur()+e.giftAmountIn.toLocaleString('en-IN'):'')+'</div>';
+          } else if(e.giftAmountIn>0){
+            h+='<div style="color:var(--grn)">&#x2191; '+cur()+e.giftAmountIn.toLocaleString('en-IN')+' · '+(e.giftTypeIn||'Cash')+' (in)'+(e.giftNoteIn?' · '+escH(e.giftNoteIn):'')+'</div>';
+          }
+          // Check-out gift
+          if(e.giftTypeOut==='Gift-in-Kind'&&(e.giftKindOut||e.giftNoteOut)){
+            h+='<div style="color:#c0a860">&#x1F381; Physical gift (out): '+escH(e.giftNoteOut||'Gift-in-Kind')+(e.giftAmountOut>0?' — est. '+cur()+e.giftAmountOut.toLocaleString('en-IN'):'')+'</div>';
+          } else if(e.giftAmountOut>0){
+            h+='<div style="color:var(--blue)">&#x2191; '+cur()+e.giftAmountOut.toLocaleString('en-IN')+' · '+(e.giftTypeOut||'Cash')+' (out)'+(e.giftNoteOut?' · '+escH(e.giftNoteOut):'')+'</div>';
+          }
+          h+='</div>';
+        }
+        h+='<button class="bedit" style="margin-top:4px" onclick="openEdit('+entIdx+')">&#x270E; Edit</button>';
+        h+='</div></div>';
+        h+='<div class="ts-row"><span class="ts ti">&#x25B6; '+fT(e.timestamp)+'</span>';
+        if((e.exitedCount||0)>0) h+='<span class="ts to">&uarr; '+e.exitedCount+' exited</span>';
+        if(rem>0) h+='<span class="ts td">'+rem+' inside</span>';
+        if(rem===0&&(e.exitedCount||0)>0) h+='<span class="ts to">all exited</span>';
+        if((e.exitedCount||0)===0) h+='<span style="font-size:9px;color:var(--txm);align-self:center">all inside</span>';
+        h+='</div></div>';
+      });
+      // Not yet arrived
+      if(REP_FILTER==='all'&&!REP_SEARCH){
+        var pend=F().filter(function(f){return !E().find(function(e){return e.familyId===f.id;});});
+        if(pend.length>0){h+='<div class="slbl">Not Yet Arrived ('+pend.length+')</div>';
+          pend.forEach(function(f){h+='<div style="padding:8px 13px;border-radius:6px;margin-bottom:4px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between;opacity:.44"><div><div style="font-size:12px;color:var(--txd)">'+f.name+'</div>'+(f.phone?'<div style="font-size:10px;color:#5a4a3a;font-family:var(--m)">'+f.phone+'</div>':'')+'</div><span style="font-size:11px;color:#5a4a3a;align-self:center">'+f.table+'</span></div>';});
+        }
+      }
+    }
+  }
+  el.innerHTML=h;
+}
+
+// ============================================================
+// CSV EXPORT
+// ============================================================
+function expCSV(){
+  function q(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}
+  function lastExitTs(e){if(e.exitEvents&&e.exitEvents.length>0)return e.exitEvents[e.exitEvents.length-1].time;if(e.exitTime)return e.exitTime;return null;}
+  var w=WI();
+  var wi=[];
+  wi.push('Event:,'+q(w.name||''));
+  if(w.bride||w.groom)wi.push('Wedding:,'+q((w.bride||'')+(w.bride&&w.groom?' & ':'')+(w.groom||'')));
+  if(w.venue)wi.push('Venue:,'+q(w.venue));
+  if(w.wdate)wi.push('Wedding Date:,'+q(new Date(w.wdate+'T00:00:00').toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})));
+  wi.push('Currency:,'+q(w.currency||'₹'));
+  wi.push('Exported:,'+q(new Date().toLocaleString()));
+  wi.push('');
+
+  // 30 columns — each gift section has: Amount, Type, Is Gift-in-Kind (Y/N), Kind Description, Note
+  var cur2=w.currency||'₹';
+  var cols=[
+    'Family ID','Family Name','Table','Phone','Family Food Pref',
+    'Total Guests','Veg Count','Non-Veg Count','Unset Count','Member Foods (G1|G2...)',
+    'Exited','Still Inside',
+    'Entry Day','Entry Month','Entry Year','Entry Time',
+    'Exit Day','Exit Month','Exit Year','Exit Time',
+    'Duration (mins)','Status',
+    // Gift In block
+    'Gift In Amount ('+cur2+')','Gift In Type','Gift In — Kind? (Y/N)','Gift In Kind Description','Gift In Note',
+    // Gift Out block
+    'Gift Out Amount ('+cur2+')','Gift Out Type','Gift Out — Kind? (Y/N)','Gift Out Kind Description','Gift Out Note',
+    // Total
+    'Cash/Cheque/UPI Total ('+cur2+')','Gift-in-Kind Items Count','Total Gift Value ('+cur2+')'
+  ];
+
+  var rows=E().map(function(e){
+    var famFP=F().find(function(ff){return ff.id===e.familyId;});
+    var fp=famFP?(famFP.foodPref||'Not responded'):'Not responded';
+    var ed=e.timestamp,lxd=lastExitTs(e);
+    var rem=e.visitors-(e.exitedCount||0);
+    var status=rem<=0?'All Exited':(e.exitedCount||0)>0?'Partial Exit':'Still Inside';
+    var dur=lxd?Math.round((lxd-ed)/60000):'';
+    var gIn=e.giftAmountIn!=null?e.giftAmountIn:0;
+    var gOut=e.giftAmountOut!=null?e.giftAmountOut:0;
+    var gTotal=e.giftTotal!=null?e.giftTotal:(gIn+gOut);
+    var gInType=e.giftTypeIn||'';
+    var gOutType=e.giftTypeOut||'';
+    var gInKind=gInType==='Gift-in-Kind'?'Y':'N';
+    var gOutKind=gOutType==='Gift-in-Kind'?'Y':'N';
+    // Kind description lives in the note when type is Gift-in-Kind
+    var gInKindDesc=(gInType==='Gift-in-Kind'&&e.giftNoteIn)?e.giftNoteIn:'';
+    var gOutKindDesc=(gOutType==='Gift-in-Kind'&&e.giftNoteOut)?e.giftNoteOut:'';
+    var gInNote=(gInType!=='Gift-in-Kind'&&e.giftNoteIn)?e.giftNoteIn:'';
+    var gOutNote=(gOutType!=='Gift-in-Kind'&&e.giftNoteOut)?e.giftNoteOut:'';
+    // Cash total excludes Gift-in-Kind amounts (they may be 0 or estimated)
+    var cashTotal=(gInType!=='Gift-in-Kind'?gIn:0)+(gOutType!=='Gift-in-Kind'?gOut:0);
+    var kindCount=(gInType==='Gift-in-Kind'?1:0)+(gOutType==='Gift-in-Kind'?1:0);
+    var vegC=e.vegCount||0,nvC=e.nvCount||0,unsetC=e.visitors-vegC-nvC;
+    var mfStr=(e.memberFoods&&e.memberFoods.length>0)?e.memberFoods.map(function(p,i){return 'G'+(i+1)+':'+(p||'?');}).join(' | '):'';
+    return [
+      q(e.familyId),q(e.familyName),q(e.table||''),q(e.phone||''),q(fp),
+      e.visitors,vegC,nvC,unsetC,q(mfStr),
+      e.exitedCount||0,rem,
+      fDay(ed),q(fMon(ed)),fYr(ed),q(fT(ed)),
+      lxd?fDay(lxd):'',lxd?q(fMon(lxd)):'',lxd?fYr(lxd):'',lxd?q(fT(lxd)):'',
+      dur,q(status),
+      gIn,q(gInType),q(gInKind),q(gInKindDesc),q(gInNote),
+      gOut,q(gOutType),q(gOutKind),q(gOutKindDesc),q(gOutNote),
+      cashTotal,kindCount,gTotal
+    ].join(',');
+  });
+
+  // Summary footer rows
+  var tGift=E().reduce(function(s,e){return s+(e.giftTotal!=null?e.giftTotal:0);},0);
+  var tCash=E().reduce(function(s,e){
+    var gIn=e.giftAmountIn!=null?e.giftAmountIn:0;
+    var gOut=e.giftAmountOut!=null?e.giftAmountOut:0;
+    return s+((e.giftTypeIn!=='Gift-in-Kind'?gIn:0))+(e.giftTypeOut!=='Gift-in-Kind'?gOut:0);
+  },0);
+  var tKind=E().reduce(function(s,e){return s+((e.giftTypeIn==='Gift-in-Kind'?1:0)+(e.giftTypeOut==='Gift-in-Kind'?1:0));},0);
+  var tVeg=E().reduce(function(s,e){return s+(e.vegCount||0);},0);
+  var tNV=E().reduce(function(s,e){return s+(e.nvCount||0);},0);
+  var tAll=E().reduce(function(s,e){return s+e.visitors;},0);
+  var colCount=cols.length;
+  function summaryRow(label,val,colIdx){
+    var arr=[];arr[0]='"'+label+'"';arr[colIdx]='"'+val+'"';
+    while(arr.length<colCount)arr.push('');return arr.join(',');
+  }
+  rows.push('');
+  rows.push(summaryRow('TOTAL VEG GUESTS',tVeg,5));
+  rows.push(summaryRow('TOTAL NON-VEG GUESTS',tNV,6));
+  rows.push(summaryRow('TOTAL GUESTS ARRIVED',tAll,4));
+  rows.push(summaryRow('TOTAL CASH/CHEQUE/UPI GIFTS',cur2+tCash.toLocaleString('en-IN'),colCount-3));
+  rows.push(summaryRow('TOTAL GIFT-IN-KIND ITEMS',tKind,colCount-2));
+  rows.push(summaryRow('TOTAL GIFT VALUE',cur2+tGift.toLocaleString('en-IN'),colCount-1));
+
+  var fname=(w.name||'Event').replace(/\s+/g,'_')+'_Guest_Report.csv';
+  var content=wi.join('\n')+cols.join(',')+'\n'+rows.join('\n');
+  var b=new Blob(['\uFEFF'+content],{type:'text/csv;charset=utf-8;'});
+  var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download=fname;a.click();URL.revokeObjectURL(u);toast('Report exported!');
+}
+function clrEnt(){if(confirm('Clear all check-in entries? Family list stays.')){EVENTS[CUR_EV].entries=[];LAST=null;sAll2();render();}}
+
+// ============================================================
+// DASHBOARD TAB
+// ============================================================
+var _charts={};
+function destroyChart(id){if(_charts[id]){_charts[id].destroy();delete _charts[id];}}
+function rDash(){
+  var el=document.getElementById('main');var w=WI();
+  var tIn=E().reduce(function(s,e){return s+e.visitors;},0);
+  var tEx=E().reduce(function(s,e){return s+(e.exitedCount||0);},0);
+  var tInside=tIn-tEx;
+  var tFam=F().length;
+  var checkedFam=E().length;
+  var notArrived=tFam-checkedFam;
+  var totalVeg=E().reduce(function(s,e){return s+(e.vegCount||0);},0);
+  var totalNV=E().reduce(function(s,e){return s+(e.nvCount||0);},0);
+  var totalUnset=tIn-totalVeg-totalNV;
+  // Gift breakdown
+  var tGiftCash=E().reduce(function(s,e){var g=e.giftAmountIn!=null?e.giftAmountIn:0;var g2=e.giftAmountOut!=null?e.giftAmountOut:0;return s+(e.giftTypeIn!=='Gift-in-Kind'?g:0)+(e.giftTypeOut!=='Gift-in-Kind'?g2:0);},0);
+  var tGiftKindCount=E().reduce(function(s,e){return s+(e.giftTypeIn==='Gift-in-Kind'?1:0)+(e.giftTypeOut==='Gift-in-Kind'?1:0);},0);
+  var tGift=E().reduce(function(s,e){return s+(e.giftTotal!=null?e.giftTotal:0);},0);
+  // Table conflicts
+  var conflicts=0;var seen={};
+  E().forEach(function(e){var rem=(e.visitors||0)-(e.exitedCount||0);if(rem>0&&e.table){var t=e.table.trim().toLowerCase();if(seen[t])conflicts++;else seen[t]=true;}});
+  // Family food prefs (WhatsApp responses)
+  var famVeg=F().filter(function(f){return f.foodPref==='Veg';}).length;
+  var famNV=F().filter(function(f){return f.foodPref==='Non-Veg';}).length;
+  var famPend=F().filter(function(f){return !f.foodPref;}).length;
+
+  var h='';
+  h+='<div style="font-size:9px;color:#a09070;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px">&#x1F4CA; Live Dashboard · '+escH(w.name)+'</div>';
+
+  // ── Row 1: Attendance stats (3 cols) ──
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px">';
+  function sb(val,lbl,col){return '<div style="padding:10px 6px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.07);border-radius:8px;text-align:center"><div style="font-size:20px;color:'+col+';font-weight:bold;line-height:1.1">'+val+'</div><div style="font-size:8px;color:var(--txd);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">'+lbl+'</div></div>';}
+  h+=sb(checkedFam+'/'+tFam,'Families In','var(--gold)');
+  h+=sb(tIn,'Total Guests','var(--grn)');
+  h+=sb(notArrived,'Not Arrived','var(--warn)');
+  h+='</div>';
+
+  // ── Row 2: Inside/Exited/Conflicts ──
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px">';
+  h+=sb(tInside,'Inside Now','var(--grn)');
+  h+=sb(tEx,'Exited','var(--blue)');
+  h+=sb(conflicts>0?'⚠ '+conflicts:'0','Table Conflicts',conflicts>0?'var(--red)':'var(--txd)');
+  h+='</div>';
+
+  // ── Row 3: Gift stats ──
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">';
+  h+=sb(cur()+tGiftCash.toLocaleString('en-IN'),'Cash/UPI/Cheque','var(--warn)');
+  h+=sb(tGiftKindCount,'Gift-in-Kind','#c0a860');
+  h+=sb(cur()+tGift.toLocaleString('en-IN'),'Total Gifts','var(--gold)');
+  h+='</div>';
+
+  // ── Row 4: Food stats (member-level) ──
+  h+='<div style="padding:10px 12px;background:rgba(212,175,55,.05);border:1px solid rgba(212,175,55,.12);border-radius:8px;margin-bottom:10px">';
+  h+='<div style="font-size:9px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px">Food — Checked-In Guests (per member)</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">';
+  h+=sb(totalVeg,'Veg Guests','#5eb87a');
+  h+=sb(totalNV,'Non-Veg','#e05555');
+  h+=sb(totalUnset,'Not Set','var(--warn)');
+  h+='</div></div>';
+
+  // ── Row 5: Family-level food prefs (WhatsApp responses) ──
+  h+='<div style="padding:10px 12px;background:rgba(94,184,122,.04);border:1px solid rgba(94,184,122,.15);border-radius:8px;margin-bottom:10px">';
+  h+='<div style="font-size:9px;color:#5eb87a;letter-spacing:2px;text-transform:uppercase;margin-bottom:7px">Food — Family WhatsApp Responses</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">';
+  h+=sb(famVeg,'Fam Veg','#5eb87a');
+  h+=sb(famNV,'Fam Non-Veg','#e05555');
+  h+=sb(famPend,'Pending Reply','var(--warn)');
+  h+='</div></div>';
+
+  // ── Charts (smaller) ──
+  h+='<div class="chartbox" style="margin-bottom:8px"><div style="font-size:9px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Arrival Progress</div><div style="position:relative;height:90px"><canvas id="dashChart1"></canvas></div></div>';
+  h+='<div class="chartbox" style="margin-bottom:8px"><div style="font-size:9px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Guest Food Breakdown</div><div style="position:relative;height:90px"><canvas id="dashChart2"></canvas></div></div>';
+  h+='<div class="chartbox" style="margin-bottom:8px"><div style="font-size:9px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Gift Type Breakdown</div><div style="position:relative;height:90px"><canvas id="dashChart4"></canvas></div></div>';
+  h+='<div class="chartbox" style="margin-bottom:10px"><div style="font-size:9px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Arrivals Per Hour</div><div style="position:relative;height:100px"><canvas id="dashChart3"></canvas></div></div>';
+
+  // ── WA Alert toggle ──
+  h+='<div style="padding:10px 12px;background:rgba(37,211,102,.05);border:1px solid rgba(37,211,102,.2);border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">';
+  h+='<div><div style="font-size:11px;color:#25d366">&#x1F4F2; WhatsApp Alerts</div>';
+  h+='<div style="font-size:9px;color:var(--txd);margin-top:2px">Check-in alerts to organiser</div></div>';
+  h+='<button onclick="toggleWAAlerts()" style="padding:6px 14px;border-radius:16px;border:1px solid rgba(37,211,102,.4);background:'+(WA_ALERTS?'rgba(37,211,102,.2)':'rgba(255,255,255,.05)')+';color:'+(WA_ALERTS?'#25d366':'var(--txd)')+';font-size:11px;cursor:pointer;font-family:Georgia,serif">'+(WA_ALERTS?'ON ✓':'OFF')+'</button></div>';
+
+  // ── All events summary ──
+  if(EVENTS.length>1){
+    h+='<div style="padding:10px 12px;background:rgba(212,175,55,.05);border:1px solid rgba(212,175,55,.15);border-radius:8px;margin-bottom:8px">';
+    h+='<div style="font-size:9px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px">All Events Summary</div>';
+    EVENTS.forEach(function(ev,i){
+      var eIn=ev.entries.reduce(function(s,e){return s+e.visitors;},0);
+      var eGift=ev.entries.reduce(function(s,e){return s+(e.giftTotal||0);},0);
+      var eVeg=ev.entries.reduce(function(s,e){return s+(e.vegCount||0);},0);
+      var eNV=ev.entries.reduce(function(s,e){return s+(e.nvCount||0);},0);
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)">';
+      h+='<div style="font-size:11px;color:'+(i===CUR_EV?'var(--gold)':'var(--tx)')+'">'+(i===CUR_EV?'▶ ':'')+escH(ev.name)+'</div>';
+      h+='<div style="font-size:10px;color:var(--txd);text-align:right">';
+      h+=ev.entries.length+' fam · '+eIn+' guests';
+      if(eVeg||eNV) h+='<br><span style="color:#5eb87a">'+eVeg+' V</span> <span style="color:#e05555">'+eNV+' NV</span>';
+      if(eGift>0) h+='<br><span style="color:var(--gold)">'+cur()+eGift.toLocaleString('en-IN')+'</span>';
+      h+='</div></div>';
+    });
+    h+='</div>';
+  }
+
+  el.innerHTML=h;
+  setTimeout(function(){
+    drawDashCharts(checkedFam,tFam-checkedFam,totalVeg,totalNV,totalUnset,tGiftCash,tGiftKindCount);
+  },80);
+}
+function toggleWAAlerts(){WA_ALERTS=!WA_ALERTS;localStorage.setItem('wed_waalerts',WA_ALERTS?'1':'0');render();toast('WhatsApp alerts '+(WA_ALERTS?'ON':'OFF'));}
+function drawDashCharts(checked,remaining,veg,nv,unset,giftCash,giftKind){
+  if(typeof Chart==='undefined') return;
+  var isDark=THEME==='dark';
+  var txtCol=isDark?'rgba(240,230,210,.6)':'rgba(60,40,20,.6)';
+  var gridCol=isDark?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)';
+  var legOpts={display:true,labels:{color:txtCol,font:{size:10},boxWidth:10,padding:8}};
+  destroyChart('c1');destroyChart('c2');destroyChart('c3');destroyChart('c4');
+
+  var c1=document.getElementById('dashChart1');
+  if(c1){
+    _charts['c1']=new Chart(c1,{type:'doughnut',data:{
+      labels:['Checked In','Not Arrived'],
+      datasets:[{data:[checked,remaining],
+        backgroundColor:['rgba(212,175,55,.75)','rgba(255,255,255,.08)'],
+        borderColor:['#d4af37','rgba(255,255,255,.08)'],borderWidth:1}]
+    },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:legOpts}}});
+  }
+
+  var c2=document.getElementById('dashChart2');
+  if(c2){
+    _charts['c2']=new Chart(c2,{type:'doughnut',data:{
+      labels:['Veg','Non-Veg','Not Set'],
+      datasets:[{data:[veg,nv,unset],
+        backgroundColor:['rgba(94,184,122,.7)','rgba(224,85,85,.65)','rgba(120,100,80,.4)'],
+        borderColor:['#5eb87a','#e05555','rgba(255,255,255,.08)'],borderWidth:1}]
+    },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:legOpts}}});
+  }
+
+  var c4=document.getElementById('dashChart4');
+  if(c4){
+    var giftCashAmt=giftCash||0;
+    var giftKindCnt=giftKind||0;
+    // Count by type
+    var typeCounts={'Cash':0,'Cheque':0,'UPI':0,'Gift-in-Kind':0};
+    E().forEach(function(e){
+      if(e.giftAmountIn>0||e.giftTypeIn==='Gift-in-Kind'){var t=e.giftTypeIn||'Cash';typeCounts[t]=(typeCounts[t]||0)+1;}
+      if(e.giftAmountOut>0||e.giftTypeOut==='Gift-in-Kind'){var t2=e.giftTypeOut||'Cash';typeCounts[t2]=(typeCounts[t2]||0)+1;}
+    });
+    var gtLabels=Object.keys(typeCounts).filter(function(k){return typeCounts[k]>0;});
+    var gtData=gtLabels.map(function(k){return typeCounts[k];});
+    var gtColors=['rgba(212,175,55,.7)','rgba(123,156,255,.7)','rgba(37,211,102,.6)','rgba(224,85,85,.6)'];
+    _charts['c4']=new Chart(c4,{type:'doughnut',data:{
+      labels:gtLabels.length?gtLabels:['No gifts yet'],
+      datasets:[{data:gtLabels.length?gtData:[1],
+        backgroundColor:gtLabels.length?gtColors.slice(0,gtLabels.length):['rgba(255,255,255,.08)'],
+        borderWidth:1}]
+    },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:legOpts}}});
+  }
+
+  var c3=document.getElementById('dashChart3');
+  if(c3&&E().length>0){
+    var hourBuckets={};
+    E().forEach(function(e){var hh=new Date(e.timestamp).getHours();hourBuckets[hh]=(hourBuckets[hh]||0)+e.visitors;});
+    var hours=Object.keys(hourBuckets).sort(function(a,b){return a-b;});
+    var labels=hours.map(function(hh){return hh+':00';});
+    var data=hours.map(function(hh){return hourBuckets[hh];});
+    _charts['c3']=new Chart(c3,{type:'bar',data:{
+      labels:labels,
+      datasets:[{label:'Guests',data:data,backgroundColor:'rgba(212,175,55,.55)',borderColor:'#d4af37',borderWidth:1}]
+    },options:{responsive:true,maintainAspectRatio:false,
+      scales:{x:{ticks:{color:txtCol,font:{size:10}},grid:{color:gridCol}},y:{ticks:{color:txtCol,font:{size:10}},grid:{color:gridCol}}},
+      plugins:{legend:{display:false}}}});
+  }
+}
+
+// ============================================================
+// SETTINGS TAB
+// ============================================================
+function rSet(){
+  var el=document.getElementById('main');
+  var w=WI();
+  var couple=(w.bride||w.groom)?(w.bride||'')+(w.bride&&w.groom?' & ':'')+(w.groom||''):'';
+  var wdateFmt=w.wdate?new Date(w.wdate+'T00:00:00').toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}):'';
+  var h='';
+  function lbl(t){return '<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">'+t+'</div>';}
+
+
+  // ── EVENTS PANEL ──────────────────────────────────────────
+  h+='<div class="panel"><div class="cn tl"></div><div class="cn tr"></div><div class="cn bl"></div><div class="cn br"></div>';
+  // Header row with lock badge
+  h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
+  h+='<div style="font-size:9px;color:#a09070;letter-spacing:3px;text-transform:uppercase">&#x1F4C5; Events</div>';
+  h+='<span id="evt-lock-badge" style="font-size:10px;padding:3px 10px;border-radius:10px;font-weight:bold;border:1px solid '+(EVT_LOCKED?'rgba(224,85,85,.4)':'rgba(94,184,122,.4)')+';background:'+(EVT_LOCKED?'rgba(224,85,85,.08)':'rgba(94,184,122,.08)')+';color:'+(EVT_LOCKED?'var(--red)':'var(--grn)')+'">'+( EVT_LOCKED?'&#x1F512; Locked':'&#x1F513; Unlocked')+'</span>';
+  h+='</div>';
+  // Active event label (always visible)
+  h+='<div style="font-size:10px;color:var(--txd);margin-bottom:10px">Active: <span style="color:var(--gold);font-weight:bold">'+escH(WI().name)+'</span></div>';
+  // Event pills — switching always allowed; delete only when unlocked
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">';
+  EVENTS.forEach(function(ev,i){
+    h+='<div style="display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:8px;border:1px solid '+(i===CUR_EV?'var(--gold)':'rgba(212,175,55,.2)')+';background:'+(i===CUR_EV?'var(--gfaint)':'rgba(255,255,255,.02)')+';">';
+    h+='<button onclick="switchEvent('+i+')" style="background:none;border:none;color:'+(i===CUR_EV?'var(--gold)':'var(--txd)')+';font-size:12px;cursor:pointer;font-family:var(--f)">'+escH(ev.name)+'</button>';
+    if(EVENTS.length>1&&!EVT_LOCKED) h+='<button onclick="delEvent('+i+')" style="background:none;border:none;color:var(--red);font-size:10px;cursor:pointer" title="Delete event">&#x2715;</button>';
+    h+='</div>';
+  });
+  h+='</div>';
+  // Add New Event — only when unlocked
+  if(!EVT_LOCKED){
+    h+='<button onclick="addEvent()" style="width:100%;padding:10px 16px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);border-radius:7px;color:var(--gold);font-size:12px;cursor:pointer;font-family:Georgia,serif;margin-bottom:12px">+ Add New Event</button>';
+    h+='<button onclick="evtLock()" style="width:100%;padding:9px;background:transparent;border:1px solid rgba(224,85,85,.3);border-radius:7px;color:var(--red);font-size:11px;cursor:pointer;font-family:var(--f)">&#x1F512; Lock Event Management</button>';
+  } else {
+    // Unlock form — master password only
+    h+='<div style="padding:12px 14px;background:rgba(212,175,55,.05);border:1px solid rgba(212,175,55,.2);border-radius:9px">';
+    h+='<div style="font-size:11px;color:var(--txd);margin-bottom:10px">Enter the event master password to add or delete events.</div>';
+    h+='<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">';
+    h+='<div style="position:relative;flex:1">';
+    h+='<input id="evt-pass-input" type="password" placeholder="Event master password" autocomplete="off"';
+    h+=' style="width:100%;padding:11px 40px 11px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(212,175,55,.35);border-radius:7px;color:var(--tx);font-size:14px;outline:none;font-family:var(--f);box-sizing:border-box"';
+    h+=' onkeydown="if(event.key===\'Enter\')evtUnlock()"/>';
+    h+='<button onclick="(function(){var i=document.getElementById(\'evt-pass-input\');i.type=i.type===\'password\'?\'text\':\'password\';})()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--txd);cursor:pointer;font-size:14px;padding:2px">&#x1F441;</button>';
+    h+='</div>';
+    h+='<button onclick="evtUnlock()" style="padding:11px 18px;background:linear-gradient(135deg,#d4af37,#b8922a);border:none;border-radius:7px;color:#0a0a0f;font-size:12px;font-weight:bold;cursor:pointer;font-family:var(--f);flex-shrink:0">Unlock</button>';
+    h+='</div>';
+    h+='<div id="evt-pass-err" style="display:none;font-size:11px;color:var(--red);padding:6px 10px;margin-top:4px;background:rgba(224,85,85,.08);border:1px solid rgba(224,85,85,.25);border-radius:6px"></div>';
+    h+='</div>';
+  }
+  h+='</div>';
+  // ── CURRENT EVENT DETAILS ──
+  h+='<div class="panel"><div class="cn tl"></div><div class="cn tr"></div><div class="cn bl"></div><div class="cn br"></div>';
+  h+='<div style="font-size:9px;color:#a09070;letter-spacing:3px;text-transform:uppercase;margin-bottom:16px">Event Details · '+escH(w.name)+'</div>';
+  h+=lbl('Event Name');h+='<input class="sinp" type="text" placeholder="e.g. Main Reception" value="'+escH(w.name||'')+'" oninput="EVENTS[CUR_EV].name=this.value;sAll2();tick()"/>';
+  h+=lbl("Bride\'s Name");h+='<input class="sinp" type="text" placeholder="e.g. Aisha" value="'+escH(w.bride||'')+'" oninput="EVENTS[CUR_EV].bride=this.value;sAll2();tick()"/>';
+  h+=lbl("Groom\'s Name");h+='<input class="sinp" type="text" placeholder="e.g. Rahul" value="'+escH(w.groom||'')+'" oninput="EVENTS[CUR_EV].groom=this.value;sAll2();tick()"/>';
+  h+=lbl('Venue');h+='<input class="sinp" type="text" placeholder="e.g. Royal Palace" value="'+escH(w.venue||'')+'" oninput="EVENTS[CUR_EV].venue=this.value;sAll2();tick()"/>';
+  h+=lbl('Event Date');h+='<input class="sinp" type="date" value="'+escH(w.wdate||'')+'" oninput="EVENTS[CUR_EV].wdate=this.value;sAll2();tick()"/>';
+  h+=lbl('Organiser WhatsApp Number');h+='<input class="sinp" type="tel" placeholder="e.g. 919876543210" value="'+escH(w.orgPhone||'')+'" oninput="EVENTS[CUR_EV].orgPhone=this.value.replace(/[^0-9]/g,\'\');sAll2()"/>';
+  h+='<div style="font-size:10px;color:var(--txm);margin-top:-6px;margin-bottom:12px">Food preference replies &amp; WA alerts go to this number</div>';
+
+  // Currency selector
+  h+=lbl('Gift Currency');
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">';
+  [['₹','INR','Indian Rupee'],['$','USD','US Dollar'],['£','GBP','British Pound'],['€','EUR','Euro'],['AED','AED','UAE Dirham'],['¥','JPY','Japanese Yen']].forEach(function(c){
+    h+='<button onclick="EVENTS[CUR_EV].currency=\''+c[0]+'\';EVENTS[CUR_EV].currencyCode=\''+c[1]+'\';sAll2();rSet()" style="padding:7px 12px;border-radius:7px;border:1px solid '+(w.currency===c[0]?'var(--gold)':'rgba(212,175,55,.2)')+';background:'+(w.currency===c[0]?'var(--gfaint)':'rgba(255,255,255,.02)')+';color:'+(w.currency===c[0]?'var(--gold)':'var(--txd)')+';font-size:13px;cursor:pointer;font-family:var(--f)" title="'+c[2]+'">'+c[0]+'</button>';
+  });
+  h+='</div>';
+
+  if(couple){h+='<div style="margin-top:4px;padding:13px;background:var(--gfaint);border:1px solid var(--gdim);border-radius:8px;text-align:center"><div style="font-size:17px;color:var(--tx);margin-bottom:3px">'+escH(couple)+'</div>'+(w.venue?'<div style="font-size:11px;color:var(--gold)">'+escH(w.venue)+'</div>':'')+(wdateFmt?'<div style="font-size:11px;color:var(--txd);margin-top:2px">'+escH(wdateFmt)+'</div>':'')+'</div>';}
+  h+='</div>';
+
+  // ── EVENT THEME ──
+  h+='<div class="panel"><div class="cn tl"></div><div class="cn tr"></div><div class="cn bl"></div><div class="cn br"></div>';
+  h+='<div style="font-size:9px;color:#a09070;letter-spacing:3px;text-transform:uppercase;margin-bottom:12px">&#x1F3A8; Event Theme</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
+  [["wedding","💍 Wedding","Gold & Dark"],["birthday","🎂 Birthday","Festive"],["corporate","🏢 Corporate","Professional"],["gala","✨ Gala","Elegant"]].forEach(function(th){
+    h+='<button onclick="EVENTS[CUR_EV].theme=\''+th[0]+'\';sAll2();render()" class="thchip'+(w.theme===th[0]?' on':'')+'">'+
+    '<div style="font-size:16px;margin-bottom:3px">'+th[1].split(' ')[0]+'</div>'+
+    '<div style="font-size:11px">'+th[1].slice(th[1].indexOf(' ')+1)+'</div>'+
+    '<div style="font-size:9px;color:var(--txm)">'+th[2]+'</div></button>';
+  });
+  h+='</div>';
+  h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Display Theme</div>';
+  h+='<div style="display:flex;gap:8px">';
+  h+='<button onclick="if(THEME!==\'dark\'){THEME=\'dark\';document.body.classList.remove(\'light-mode\');localStorage.setItem(\'wed_theme\',\'dark\');document.getElementById(\'themeBtn\').textContent=\'\u2600\uFE0F\';rSet();}" style="flex:1;padding:10px;border-radius:8px;border:1px solid '+(THEME==='dark'?'var(--gold)':'rgba(212,175,55,.2)')+';background:'+(THEME==='dark'?'var(--gfaint)':'rgba(255,255,255,.02)')+';color:'+(THEME==='dark'?'var(--gold)':'var(--txd)')+';font-size:12px;cursor:pointer;font-family:var(--f)">🌙 Dark</button>';
+  h+='<button onclick="if(THEME!==\'light\'){THEME=\'light\';document.body.classList.add(\'light-mode\');localStorage.setItem(\'wed_theme\',\'light\');document.getElementById(\'themeBtn\').textContent=\'\U0001f319\';rSet();}" style="flex:1;padding:10px;border-radius:8px;border:1px solid '+(THEME==='light'?'var(--gold)':'rgba(212,175,55,.2)')+';background:'+(THEME==='light'?'var(--gfaint)':'rgba(255,255,255,.02)')+';color:'+(THEME==='light'?'var(--gold)':'var(--txd)')+';font-size:12px;cursor:pointer;font-family:var(--f)">☀️ Light</button>';
+  h+='</div></div>';
+  // ── SECURITY ──
+  h+='<div class="panel"><div class="cn tl"></div><div class="cn tr"></div><div class="cn bl"></div><div class="cn br"></div>';
+  h+='<div style="font-size:9px;color:#a09070;letter-spacing:3px;text-transform:uppercase;margin-bottom:16px">Security</div>';
+
+  // Current credentials viewer with show/hide toggle
+  h+='<div style="padding:12px 14px;background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.2);border-radius:10px;margin-bottom:14px">';
+  h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
+  h+='<div style="font-size:9px;color:var(--gold);letter-spacing:2px;text-transform:uppercase">Current Login Credentials</div>';
+  h+='<button id="credToggleBtn" onclick="toggleCredView()" style="background:none;border:1px solid rgba(212,175,55,.3);border-radius:5px;color:var(--gold);font-size:10px;padding:3px 8px;cursor:pointer;font-family:var(--f)">Show</button>';
+  h+='</div>';
+  h+='<div id="credViewHidden" style="">';
+  h+='<div style="font-size:12px;color:var(--tx);font-family:var(--m)">Username: <span style="color:var(--gold)">'+escH(CREDS.u)+'</span></div>';
+  h+='<div style="font-size:12px;color:var(--tx);font-family:var(--m);margin-top:3px">Password: <span id="credPwdDisplay" style="color:var(--txd)">••••••••</span></div>';
+  h+='</div>';
+  h+='<div id="credViewVisible" style="display:none">';
+  h+='<div style="font-size:13px;color:var(--tx);font-family:var(--m)">Username: <span style="color:var(--gold);font-weight:bold">'+escH(CREDS.u)+'</span></div>';
+  h+='<div style="font-size:13px;color:var(--tx);font-family:var(--m);margin-top:4px">Password: <span style="color:var(--gold);font-weight:bold">'+escH(CREDS.p)+'</span></div>';
+  h+='<div style="font-size:9px;color:#5a4a3a;margin-top:7px">&#x26A0; Do not share this screen in public</div>';
+  h+='</div></div>';
+
+  h+=lbl('Change Username');h+='<input class="sinp" id="sUsr" type="text" placeholder="Username" autocorrect="off" autocapitalize="off" value="'+escH(CREDS.u||'')+'"/>';
+  h+=lbl('New Password');h+='<input class="sinp" id="sPwd" type="password" placeholder="Enter new password" autocomplete="new-password"/>';
+  h+=lbl('Confirm New Password');h+='<input class="sinp" id="sPwd2" type="password" placeholder="Repeat new password" autocomplete="new-password"/>';
+  h+='<div id="pwdMsg" style="font-size:11px;margin-bottom:8px;min-height:16px"></div>';
+  h+='<button class="bp" style="margin-top:0" onclick="saveCredentials()">Save Credentials</button>';
+
+  // Reset to default button
+  h+='<button onclick="doSettingsReset()" style="display:block;width:100%;padding:10px;margin-top:8px;background:transparent;border:1px solid rgba(224,85,85,.3);border-radius:7px;color:var(--red);font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:var(--f)">&#x21BA; Reset to Default Credentials</button>';
+
+  // Default credentials reference card (backend only — not shown on login page)
+  h+='<div style="margin-top:12px;padding:12px 14px;background:rgba(0,0,0,.25);border:1px solid rgba(212,175,55,.15);border-radius:9px">';
+  h+='<div style="font-size:9px;color:var(--txd);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">&#x1F511; Default Credentials (Fallback)</div>';
+  h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:rgba(255,255,255,.03);border-radius:6px;margin-bottom:5px">';
+  h+='<span style="font-size:11px;color:var(--txd)">Username</span>';
+  h+='<span style="font-size:13px;color:var(--gold);font-family:var(--m);font-weight:bold">admin</span>';
+  h+='</div>';
+  h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:rgba(255,255,255,.03);border-radius:6px;margin-bottom:8px">';
+  h+='<span style="font-size:11px;color:var(--txd)">Password</span>';
+  h+='<span style="font-size:13px;color:var(--gold);font-family:var(--m);font-weight:bold">wedding2026</span>';
+  h+='</div>';
+  h+='<div style="font-size:9px;color:var(--txm);line-height:1.5">Use "Reset to Default Credentials" above if you are locked out. These are the factory defaults.</div>';
+  h+='</div>';
+
+  h+='<div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.06)">';
+  h+='<button class="bp" style="background:linear-gradient(135deg,#5577ee,#3355cc);margin-top:0;margin-bottom:10px" onclick="openSelfTest()">Test Camera Scanner</button>';
+  h+='<button class="bp" style="background:linear-gradient(135deg,#e05555,#b83030);margin-top:0" onclick="doLogout()">Sign Out</button>';
+  h+='</div>';
+  h+='<div style="font-size:10px;color:var(--txm);text-align:center;margin-top:10px">Session expires when browser closes</div>';
+  h+='</div>';
+  el.innerHTML=h;
+}
+
+// ============================================================
+// PWA
+// ============================================================
+var _dp=null;
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();_dp=e;var b=document.getElementById('iBnr'),t=document.getElementById('iTxt');t.innerHTML='Install as App - add to home screen for offline use.';b.style.display='flex';b.style.cursor='pointer';b.onclick=function(){_dp.prompt();_dp.userChoice.then(function(){b.style.display='none';_dp=null;});};});
+var _ios=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.MSStream;
+var _standalone=window.matchMedia('(display-mode:standalone)').matches||navigator.standalone;
+if(_ios&&!_standalone){var bnr=document.getElementById('iBnr'),btxt=document.getElementById('iTxt');btxt.innerHTML='iPhone: Tap Share then "Add to Home Screen"';bnr.style.display='flex';}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
+document.addEventListener('visibilitychange',function(){if(document.hidden)stopCam();});
+
+// ============================================================
+// INIT
+// ============================================================
+if(sessionStorage.getItem('wed_sess')==='1'){
+  document.getElementById('login-overlay-root').style.display='none';
+  render();
+} else {
+  setTimeout(function(){var u=document.getElementById('lusr');if(u)u.focus();},200);
+}
+</script>
+</body>
+</html>
